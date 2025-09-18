@@ -1,0 +1,38 @@
+SELECT Title FROM Employees WHERE FirstName = 'nancy'
+SELECT * FROM Employees WHERE Title = (SELECT Title FROM Employees WHERE FirstName = 'nancy')
+SELECT FirstName, LastName FROM Employees WHERE BirthDate = (SELECT min(BirthDate) FROM Employees)
+SELECT ProductName FROM Products WHERE Unitprice > (SELECT Unitprice FROM Products WHERE ProductName = 'Ikura')
+SELECT CompanyName FROM Customers WHERE city = (SELECT city FROM Customers WHERE CompanyName = 'Around the Horn')
+SELECT FirstName, LastName FROM Employees WHERE HireDate = (SELECT max(HireDate) FROM Employees)
+SELECT * FROM Orders WHERE ShipCountry not in (SELECT distinct country FROM Suppliers)
+SELECT ROW_NUMBER() OVER (Order by Unitprice ) AS RowNum, ProductName, UnitPrice FROM Products WHERE UnitPrice < 50 
+
+INSERT into Shippers
+VALUES('บริษัทขนเยอะจำกัด', '081-12345678')
+
+INSERT into Shippers(CompanyName)
+VALUES('บริษัทขนมหาศาลจำกัด')
+
+SELECT * FROM Customers
+
+INSERT into Customers(CustomerID, CompanyName)
+VALUES('A0001', 'บริษัทซื้อเยอะจำกัด')
+
+INSERT into Employees(FirstName, LastName)
+VALUES('วุ้นเส้น', 'เขมรสกุล')
+
+UPDATE Shippers
+SET Phone = '085-999999'
+WHERE ShipperID = 6
+
+SELECT * FROM Shippers
+
+UPDATE Products
+SET UnitsInStock = UnitsInStock+100
+WHERE ProductID = 1
+
+SELECT * FROM Products
+
+UPDATE Customers
+SET City = 'อุดรธานี', Country = 'Thailand'
+WHERE CustomerID = 'A0001'
