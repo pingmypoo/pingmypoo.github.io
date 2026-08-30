@@ -298,20 +298,20 @@
     return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
   }
 
-  async function loadState(){
+  function loadState(){
     try{
-      const res = await window.storage.get(STORAGE_KEY, false);
-      if(res && res.value){
-        const parsed = JSON.parse(res.value);
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        const parsed = JSON.parse(raw);
         if(Array.isArray(parsed) && parsed.length === 5) bosses = parsed;
       }
-    }catch(e){ /* no saved state yet, use defaults */ }
+    }catch(e){ /* no saved state yet, or storage unavailable — use defaults */ }
     render();
   }
 
-  async function saveState(){
+  function saveState(){
     try{
-      await window.storage.set(STORAGE_KEY, JSON.stringify(bosses), false);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(bosses));
     }catch(e){ console.error('Storage error', e); }
   }
 
@@ -560,7 +560,7 @@
   updateNotifyBtn();
   spawnEmbers();
   loadState();
-  setInterval(tick, 5000);
+  setInterval(tick, 1000);
 })();
 </script>
 
