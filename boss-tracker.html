@@ -247,9 +247,9 @@
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">Boss Reward NOtification</div>
-    <h1>BOSS<em>TIMERS</em></h1>
-    <p class="sub">สุดโหด</p>
+    <div class="eyebrow">Boss Camp</div>
+    <h1>แคมป์เฝ้า<em>บอส</em></h1>
+    <p class="sub">กดตอนบอสตาย แล้วเดินไปพักผ่อนได้เลย เดี๋ยวมาบอกเองตอนบอสใกล้เกิดใหม่</p>
   </header>
 
   <div class="notify-row">
@@ -274,16 +274,18 @@
   const CIRC = 2 * Math.PI * RADIUS;
 
   const defaultState = () => ([
-    { id: 1, name: 'Rei', deadAt: null },
-    { id: 2, name: 'Kure', deadAt: null },
-    { id: 3, name: 'Pickle', deadAt: null },
-    { id: 4, name: 'Niko', deadAt: null },
-    { id: 5, name: 'Wu', deadAt: null },
+    { id: 1, name: 'บอสจุดที่ 1', deadAt: null },
+    { id: 2, name: 'บอสจุดที่ 2', deadAt: null },
+    { id: 3, name: 'บอสจุดที่ 3', deadAt: null },
+    { id: 4, name: 'บอสจุดที่ 4', deadAt: null },
+    { id: 5, name: 'บอสจุดที่ 5', deadAt: null },
   ]);
 
   let bosses = defaultState();
   const notified = new Set();
   let audioCtx = null;
+  let editingId = null;
+  const els = {}; // per-boss element refs, filled by render()
 
   const grid = document.getElementById('grid');
   const notifyBtn = document.getElementById('notifyBtn');
@@ -386,6 +388,7 @@
 
   function startRename(id, nameEl){
     const boss = bosses.find(b => b.id === id);
+    editingId = id;
     const input = document.createElement('input');
     input.className = 'name-input';
     input.value = boss.name;
@@ -393,28 +396,45 @@
     nameEl.replaceWith(input);
     input.focus();
     input.select();
+    let done = false;
     const commit = () => {
+      if(done) return;
+      done = true;
       const val = input.value.trim() || boss.name;
       boss.name = val;
+      editingId = null;
       saveState();
+      render();
+    };
+    const cancel = () => {
+      if(done) return;
+      done = true;
+      editingId = null;
       render();
     };
     input.addEventListener('blur', commit);
     input.addEventListener('keydown', e => {
       if(e.key === 'Enter') input.blur();
-      if(e.key === 'Escape'){ render(); }
+      if(e.key === 'Escape') cancel();
     });
   }
 
+  function bossPhase(boss, now){
+    const remaining = boss.deadAt ? (boss.deadAt + RESPAWN_MS - now) : null;
+    const isWaiting = remaining !== null && remaining > 0;
+    const isReady = remaining !== null && remaining <= 0;
+    const isAlive = boss.deadAt === null;
+    return { remaining, isWaiting, isReady, isAlive };
+  }
+
+  // Full rebuild: call after actions that change structure (mark dead, reset, rename commit, load).
+  // Does NOT run on the per-second timer, so it never interrupts an in-progress name edit.
   function render(){
     grid.innerHTML = '';
     const now = Date.now();
 
     bosses.forEach(boss => {
-      const remaining = boss.deadAt ? (boss.deadAt + RESPAWN_MS - now) : null;
-      const isWaiting = remaining !== null && remaining > 0;
-      const isReady = remaining !== null && remaining <= 0;
-      const isAlive = boss.deadAt === null;
+      const { remaining, isWaiting, isReady, isAlive } = bossPhase(boss, now);
 
       if(isReady && !notified.has(boss.id)){
         notified.add(boss.id);
@@ -464,8 +484,9 @@
       mainBtn.addEventListener('click', () => markDead(boss.id));
       actions.appendChild(mainBtn);
 
+      let resetBtn = null;
       if(!isAlive){
-        const resetBtn = document.createElement('button');
+        resetBtn = document.createElement('button');
         resetBtn.className = 'btn btn-ghost';
         resetBtn.textContent = 'รีเซ็ต';
         resetBtn.addEventListener('click', () => reset(boss.id));
@@ -477,7 +498,50 @@
       card.appendChild(ringWrap);
       card.appendChild(actions);
       grid.appendChild(card);
+
+      els[boss.id] = { card, nameEl, statusEl, timerEl, ringFg: ringWrap.querySelector('.ring-fg'), mainBtn, actions, resetBtn };
     });
+  }
+
+  // Lightweight per-second update: only touches numbers/status/button text.
+  // Never rebuilds the name area, so an open rename <input> is left completely alone.
+  function tick(){
+    const now = Date.now();
+    let structuralChange = false;
+
+    bosses.forEach(boss => {
+      const ref = els[boss.id];
+      if(!ref) return;
+      const { remaining, isWaiting, isReady, isAlive } = bossPhase(boss, now);
+
+      // isAlive <-> !isAlive changes the reset button's presence — needs a full render.
+      const hasResetBtn = !!ref.resetBtn;
+      if(isAlive === hasResetBtn){ structuralChange = true; }
+
+      if(isReady && !notified.has(boss.id)){
+        notified.add(boss.id);
+        notify(boss);
+      }
+
+      if(editingId === boss.id){
+        // Name input is open for this boss — skip touching this card entirely.
+        return;
+      }
+
+      ref.card.className = 'card' + (isReady ? ' ready' : '');
+      ref.statusEl.className = 'status' + (isWaiting ? ' waiting' : '') + (isReady ? ' ready' : '');
+      ref.statusEl.textContent = isAlive ? 'มีชีวิต' : isWaiting ? 'กำลังเกิดใหม่' : 'พร้อมล่า!';
+
+      const pct = isWaiting ? Math.min(1, Math.max(0, 1 - remaining / RESPAWN_MS)) : (isReady ? 1 : 0);
+      ref.ringFg.setAttribute('stroke-dashoffset', isAlive ? CIRC : CIRC * (1 - pct));
+
+      ref.timerEl.className = 'timer' + (isAlive ? ' small' : '');
+      ref.timerEl.textContent = isAlive ? 'ยังไม่ตาย' : isReady ? 'เกิดแล้ว' : fmt(remaining);
+
+      ref.mainBtn.textContent = isAlive ? 'บอสตายแล้ว' : isReady ? 'บอสตายอีกแล้ว' : 'บอสตายแล้ว';
+    });
+
+    if(structuralChange) render();
   }
 
   function spawnEmbers(){
@@ -496,7 +560,7 @@
   updateNotifyBtn();
   spawnEmbers();
   loadState();
-  setInterval(render, 1000);
+  setInterval(tick, 1000);
 })();
 </script>
 
