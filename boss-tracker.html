@@ -631,7 +631,7 @@
       ref.timerEl.className = 'timer' + (isAlive ? ' small' : '');
       ref.timerEl.textContent = isAlive ? 'ยังไม่รี' : isReady ? 'มาละพร้อมลั่น' : fmt(remaining);
 
-      ref.mainBtn.textContent = isAlive ? 'บอสแห้ง' : isReady ? 'แห้งอีกแล้ว' : 'บอสแห้งแล่ว';
+      ref.mainBtn.textContent = isAlive ? 'บอสแห้ง' : isReady ? 'เริ่มนับใหม่' : 'บอสแห้งแล่ว';
     });
 
     if(structuralChange) render();
