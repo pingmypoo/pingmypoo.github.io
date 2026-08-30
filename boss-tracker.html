@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แคมป์เฝ้าบอส</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #141F19;
+    --bg-2: #0F1814;
+    --surface: #1E2C24;
+    --surface-2: #24352B;
+    --line: #34473A;
+    --ember: #E8944A;
+    --ember-bright: #FFC17E;
+    --alive: #7FA88A;
+    --text: #EEE7D4;
+    --text-dim: #98A99A;
+    --danger: #C97157;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0; padding:0;
+    background: radial-gradient(ellipse 120% 80% at 50% -10%, #1C2A22 0%, var(--bg) 45%, var(--bg-2) 100%);
+    color: var(--text);
+    font-family: 'Work Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .embers{
+    position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+  }
+  .ember-dot{
+    position: absolute;
+    bottom: -10px;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--ember);
+    box-shadow: 0 0 6px 2px rgba(232,148,74,0.55);
+    opacity: 0;
+    animation: drift 9s linear infinite;
+  }
+  @keyframes drift{
+    0%   { transform: translateY(0) translateX(0); opacity: 0; }
+    8%   { opacity: 0.8; }
+    100% { transform: translateY(-100vh) translateX(var(--dx, 20px)); opacity: 0; }
+  }
+
+  .wrap{
+    position: relative; z-index: 1;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+  }
+
+  header{
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .eyebrow{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ember);
+    margin-bottom: 14px;
+  }
+  h1{
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(32px, 5vw, 48px);
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+  }
+  h1 em{
+    font-style: italic;
+    font-weight: 500;
+    color: var(--ember-bright);
+  }
+  .sub{
+    color: var(--text-dim);
+    font-size: 15px;
+    max-width: 480px;
+    margin: 0 auto 28px;
+    line-height: 1.6;
+  }
+
+  .notify-row{
+    display:flex; justify-content:center; margin-bottom: 44px;
+  }
+  .notify-btn{
+    font-family: 'Work Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 18px;
+    cursor: pointer;
+    transition: border-color .2s, color .2s;
+    display:flex; align-items:center; gap:8px;
+  }
+  .notify-btn:hover{ border-color: var(--ember); color: var(--text); }
+  .notify-btn .dot{
+    width:7px; height:7px; border-radius:50%;
+    background: var(--danger);
+    display:inline-block;
+  }
+  .notify-btn.on .dot{ background: var(--alive); box-shadow: 0 0 6px 1px rgba(127,168,138,0.6); }
+
+  .grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 18px;
+  }
+
+  .card{
+    position: relative;
+    background: linear-gradient(175deg, var(--surface) 0%, var(--surface-2) 100%);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 22px 20px 20px;
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    gap: 14px;
+    transition: border-color .3s, transform .2s;
+  }
+  .card.ready{
+    border-color: var(--ember);
+    box-shadow: 0 0 0 1px rgba(232,148,74,0.25), 0 0 28px -6px rgba(232,148,74,0.55);
+    animation: pulseCard 1.8s ease-in-out infinite;
+  }
+  @keyframes pulseCard{
+    0%,100%{ box-shadow: 0 0 0 1px rgba(232,148,74,0.2), 0 0 20px -8px rgba(232,148,74,0.4); }
+    50%{ box-shadow: 0 0 0 1px rgba(232,148,74,0.45), 0 0 34px -4px rgba(232,148,74,0.75); }
+  }
+
+  .name-row{ width:100%; }
+  .boss-name{
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 19px;
+    cursor: text;
+    border-bottom: 1px dashed transparent;
+    padding-bottom: 2px;
+    word-break: break-word;
+  }
+  .boss-name:hover{ border-bottom-color: var(--line); }
+  .name-input{
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 19px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--ember);
+    color: var(--text);
+    text-align:center;
+    width: 100%;
+    outline: none;
+  }
+
+  .status{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: rgba(127,168,138,0.12);
+    color: var(--alive);
+  }
+  .status.waiting{ background: rgba(232,148,74,0.12); color: var(--ember-bright); }
+  .status.ready{ background: rgba(232,148,74,0.22); color: var(--ember-bright); }
+
+  .ring-wrap{
+    position: relative;
+    width: 128px; height: 128px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ring-wrap svg{ transform: rotate(-90deg); }
+  .ring-bg{ fill:none; stroke: var(--line); stroke-width: 6; }
+  .ring-fg{ fill:none; stroke: var(--ember); stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+  .timer{
+    position:absolute;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 20px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .timer.small{ font-size: 13px; color: var(--text-dim); letter-spacing: 0.04em; }
+
+  .actions{ display:flex; gap: 8px; width:100%; }
+  .btn{
+    flex:1;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 500;
+    font-size: 13.5px;
+    padding: 10px 10px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: transform .15s, filter .15s, background .2s;
+  }
+  .btn:active{ transform: scale(0.97); }
+  .btn-primary{
+    background: var(--ember);
+    color: #1A1108;
+  }
+  .btn-primary:hover{ filter: brightness(1.08); }
+  .btn-ghost{
+    background: transparent;
+    border-color: var(--line);
+    color: var(--text-dim);
+  }
+  .btn-ghost:hover{ border-color: var(--danger); color: var(--danger); }
+
+  footer{
+    text-align:center;
+    margin-top: 48px;
+    color: var(--text-dim);
+    font-size: 12.5px;
+    line-height: 1.7;
+  }
+  footer code{
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--surface);
+    padding: 1px 6px;
+    border-radius: 5px;
+    border: 1px solid var(--line);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .ember-dot{ animation: none; display:none; }
+    .card.ready{ animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="embers" id="embers"></div>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Boss Camp</div>
+    <h1>แคมป์เฝ้า<em>บอส</em></h1>
+    <p class="sub">กดตอนบอสตาย แล้วเดินไปพักผ่อนได้เลย เดี๋ยวมาบอกเองตอนบอสใกล้เกิดใหม่</p>
+  </header>
+
+  <div class="notify-row">
+    <button class="notify-btn" id="notifyBtn">
+      <span class="dot"></span>
+      <span id="notifyLabel">เปิดการแจ้งเตือน</span>
+    </button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>
+    ตั้งเวลาไว้ที่ <code>45 นาที</code> ต่อบอสหนึ่งตัว &middot; แตะชื่อบอสเพื่อแก้ไข &middot; ข้อมูลจะถูกจำไว้ในเครื่องนี้
+  </footer>
+</div>
+
+<script>
+(function(){
+  const RESPAWN_MS = 45 * 60 * 1000;
+  const STORAGE_KEY = 'boss-camp-state-v1';
+  const RADIUS = 56;
+  const CIRC = 2 * Math.PI * RADIUS;
+
+  const defaultState = () => ([
+    { id: 1, name: 'บอสจุดที่ 1', deadAt: null },
+    { id: 2, name: 'บอสจุดที่ 2', deadAt: null },
+    { id: 3, name: 'บอสจุดที่ 3', deadAt: null },
+    { id: 4, name: 'บอสจุดที่ 4', deadAt: null },
+    { id: 5, name: 'บอสจุดที่ 5', deadAt: null },
+  ]);
+
+  let bosses = defaultState();
+  const notified = new Set();
+  let audioCtx = null;
+
+  const grid = document.getElementById('grid');
+  const notifyBtn = document.getElementById('notifyBtn');
+  const notifyLabel = document.getElementById('notifyLabel');
+
+  function fmt(ms){
+    const total = Math.max(0, Math.ceil(ms / 1000));
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }
+
+  async function loadState(){
+    try{
+      const res = await window.storage.get(STORAGE_KEY, false);
+      if(res && res.value){
+        const parsed = JSON.parse(res.value);
+        if(Array.isArray(parsed) && parsed.length === 5) bosses = parsed;
+      }
+    }catch(e){ /* no saved state yet, use defaults */ }
+    render();
+  }
+
+  async function saveState(){
+    try{
+      await window.storage.set(STORAGE_KEY, JSON.stringify(bosses), false);
+    }catch(e){ console.error('Storage error', e); }
+  }
+
+  function playChime(){
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = audioCtx.currentTime;
+      [660, 880].forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, now + i * 0.18);
+        gain.gain.linearRampToValueAtTime(0.18, now + i * 0.18 + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.18 + 0.5);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(now + i * 0.18);
+        osc.stop(now + i * 0.18 + 0.55);
+      });
+    }catch(e){ /* audio not available */ }
+  }
+
+  function notify(boss){
+    playChime();
+    if(window.Notification && Notification.permission === 'granted'){
+      try{
+        new Notification('บอสพร้อมล่าแล้ว! 🔥', {
+          body: boss.name + ' เกิดใหม่แล้ว ไปลุยกันเลย',
+          tag: 'boss-' + boss.id
+        });
+      }catch(e){ /* ignore */ }
+    }
+  }
+
+  function updateNotifyBtn(){
+    const supported = 'Notification' in window;
+    if(!supported){
+      notifyLabel.textContent = 'เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน';
+      notifyBtn.disabled = true;
+      return;
+    }
+    if(Notification.permission === 'granted'){
+      notifyBtn.classList.add('on');
+      notifyLabel.textContent = 'แจ้งเตือนพร้อมใช้งาน';
+    } else {
+      notifyBtn.classList.remove('on');
+      notifyLabel.textContent = 'เปิดการแจ้งเตือน';
+    }
+  }
+
+  notifyBtn.addEventListener('click', async () => {
+    if(!('Notification' in window)) return;
+    if(Notification.permission !== 'granted'){
+      await Notification.requestPermission();
+    }
+    updateNotifyBtn();
+  });
+
+  function markDead(id){
+    const boss = bosses.find(b => b.id === id);
+    boss.deadAt = Date.now();
+    notified.delete(id);
+    saveState();
+    render();
+  }
+
+  function reset(id){
+    const boss = bosses.find(b => b.id === id);
+    boss.deadAt = null;
+    notified.delete(id);
+    saveState();
+    render();
+  }
+
+  function startRename(id, nameEl){
+    const boss = bosses.find(b => b.id === id);
+    const input = document.createElement('input');
+    input.className = 'name-input';
+    input.value = boss.name;
+    input.maxLength = 24;
+    nameEl.replaceWith(input);
+    input.focus();
+    input.select();
+    const commit = () => {
+      const val = input.value.trim() || boss.name;
+      boss.name = val;
+      saveState();
+      render();
+    };
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', e => {
+      if(e.key === 'Enter') input.blur();
+      if(e.key === 'Escape'){ render(); }
+    });
+  }
+
+  function render(){
+    grid.innerHTML = '';
+    const now = Date.now();
+
+    bosses.forEach(boss => {
+      const remaining = boss.deadAt ? (boss.deadAt + RESPAWN_MS - now) : null;
+      const isWaiting = remaining !== null && remaining > 0;
+      const isReady = remaining !== null && remaining <= 0;
+      const isAlive = boss.deadAt === null;
+
+      if(isReady && !notified.has(boss.id)){
+        notified.add(boss.id);
+        notify(boss);
+      }
+
+      const card = document.createElement('div');
+      card.className = 'card' + (isReady ? ' ready' : '');
+
+      const nameRow = document.createElement('div');
+      nameRow.className = 'name-row';
+      const nameEl = document.createElement('div');
+      nameEl.className = 'boss-name';
+      nameEl.textContent = boss.name;
+      nameEl.title = 'แตะเพื่อแก้ไขชื่อ';
+      nameEl.addEventListener('click', () => startRename(boss.id, nameEl));
+      nameRow.appendChild(nameEl);
+
+      const statusEl = document.createElement('div');
+      statusEl.className = 'status' + (isWaiting ? ' waiting' : '') + (isReady ? ' ready' : '');
+      statusEl.textContent = isAlive ? 'มีชีวิต' : isWaiting ? 'กำลังเกิดใหม่' : 'พร้อมล่า!';
+
+      const ringWrap = document.createElement('div');
+      ringWrap.className = 'ring-wrap';
+
+      const pct = isWaiting ? Math.min(1, Math.max(0, 1 - remaining / RESPAWN_MS)) : (isReady ? 1 : 0);
+      const offset = CIRC * (1 - pct);
+
+      ringWrap.innerHTML = `
+        <svg width="128" height="128" viewBox="0 0 128 128">
+          <circle class="ring-bg" cx="64" cy="64" r="${RADIUS}"></circle>
+          <circle class="ring-fg" cx="64" cy="64" r="${RADIUS}"
+            stroke-dasharray="${CIRC}" stroke-dashoffset="${isAlive ? CIRC : offset}"></circle>
+        </svg>
+      `;
+      const timerEl = document.createElement('div');
+      timerEl.className = 'timer' + (isAlive ? ' small' : '');
+      timerEl.textContent = isAlive ? 'ยังไม่ตาย' : isReady ? 'เกิดแล้ว' : fmt(remaining);
+      ringWrap.appendChild(timerEl);
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+
+      const mainBtn = document.createElement('button');
+      mainBtn.className = 'btn btn-primary';
+      mainBtn.textContent = isAlive ? 'บอสตายแล้ว' : isReady ? 'บอสตายอีกแล้ว' : 'บอสตายแล้ว';
+      mainBtn.addEventListener('click', () => markDead(boss.id));
+      actions.appendChild(mainBtn);
+
+      if(!isAlive){
+        const resetBtn = document.createElement('button');
+        resetBtn.className = 'btn btn-ghost';
+        resetBtn.textContent = 'รีเซ็ต';
+        resetBtn.addEventListener('click', () => reset(boss.id));
+        actions.appendChild(resetBtn);
+      }
+
+      card.appendChild(nameRow);
+      card.appendChild(statusEl);
+      card.appendChild(ringWrap);
+      card.appendChild(actions);
+      grid.appendChild(card);
+    });
+  }
+
+  function spawnEmbers(){
+    const container = document.getElementById('embers');
+    for(let i=0;i<14;i++){
+      const dot = document.createElement('div');
+      dot.className = 'ember-dot';
+      dot.style.left = (Math.random()*100) + 'vw';
+      dot.style.setProperty('--dx', (Math.random()*40-20) + 'px');
+      dot.style.animationDelay = (Math.random()*9) + 's';
+      dot.style.animationDuration = (7 + Math.random()*5) + 's';
+      container.appendChild(dot);
+    }
+  }
+
+  updateNotifyBtn();
+  spawnEmbers();
+  loadState();
+  setInterval(render, 1000);
+})();
+</script>
+
+</body>
+</html>
