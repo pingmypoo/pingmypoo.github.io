@@ -22,6 +22,8 @@
     --text: #EEE7D4;
     --text-dim: #98A99A;
     --danger: #C97157;
+    --grinder: #7FA8D6;
+    --grinder-bright: #A9C6EC;
   }
 
   *{ box-sizing: border-box; }
@@ -94,7 +96,9 @@
   }
 
   .notify-row{
-    display:flex; justify-content:center; margin-bottom: 44px;
+    display:flex; justify-content:center; align-items:center; gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 44px;
   }
   .notify-btn{
     font-family: 'Work Sans', sans-serif;
@@ -197,6 +201,57 @@
   }
   .timer.small{ font-size: 13px; color: var(--text-dim); letter-spacing: 0.04em; }
 
+  .grinder-global{
+    display:flex; align-items:center; gap: 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 8px 6px 16px;
+    background: transparent;
+    transition: border-color .2s;
+  }
+  .grinder-global.active{ border-color: var(--grinder); }
+  .grinder-global .grinder-label{
+    line-height: 1.2;
+  }
+  .grinder-global .grinder-label .title{
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+  }
+  .grinder-global.active .grinder-label .title{ color: var(--text); }
+  .grinder-global .grinder-label .hint{
+    font-size: 10.5px;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .switch{
+    position: relative;
+    width: 42px; height: 24px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--bg-2);
+    cursor: pointer;
+    padding: 0;
+    transition: background .2s, border-color .2s;
+  }
+  .switch .knob{
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    transition: transform .2s, background .2s;
+  }
+  .switch.active{
+    background: rgba(127,168,214,0.22);
+    border-color: var(--grinder);
+  }
+  .switch.active .knob{
+    transform: translateX(18px);
+    background: var(--grinder-bright);
+  }
+
   .actions{ display:flex; gap: 8px; width:100%; }
   .btn{
     flex:1;
@@ -259,18 +314,26 @@
       <span class="dot"></span>
       <span id="notifyLabel">เปิดการแจ้งเตือน</span>
     </button>
+    <button class="grinder-global" id="grinderGlobalBtn" role="switch" aria-checked="false">
+      <span class="grinder-label">
+        <span class="title">Grinder</span>
+        <span class="hint">-15% เวลาเกิด (ทุกบอส)</span>
+      </span>
+      <span class="switch" id="grinderSwitch"><span class="knob"></span></span>
+    </button>
   </div>
 
   <div class="grid" id="grid"></div>
 
   <footer>
-    ตั้งเวลาไว้ที่ <code>45 นาที</code> ต่อบอสหนึ่งตัว &middot; แตะชื่อบอสเพื่อแก้ไข &middot; ข้อมูลจะถูกจำไว้ในเครื่องนี้
+    ตั้งเวลาไว้ที่ <code>45 นาที</code> ต่อบอสหนึ่งตัว &middot; แตะชื่อบอสเพื่อแก้ไข &middot; เปิดสวิตช์ <code>Grinder</code> ด้านบนเพื่อลดเวลาเกิดใหม่ 15% ให้ทุกบอสพร้อมกัน &middot; ข้อมูลจะถูกจำไว้ในเครื่องนี้
   </footer>
 </div>
 
 <script>
 (function(){
   const RESPAWN_MS = 45 * 60 * 1000;
+  const GRINDER_MULTIPLIER = 0.85; // grinder trait: 15% shorter respawn
   const STORAGE_KEY = 'boss-camp-state-v1';
   const RADIUS = 56;
   const CIRC = 2 * Math.PI * RADIUS;
@@ -284,6 +347,7 @@
   ]);
 
   let bosses = defaultState();
+  let grinderActive = false;
   const notified = new Set();
   let audioCtx = null;
   let editingId = null;
@@ -292,6 +356,8 @@
   const grid = document.getElementById('grid');
   const notifyBtn = document.getElementById('notifyBtn');
   const notifyLabel = document.getElementById('notifyLabel');
+  const grinderGlobalBtn = document.getElementById('grinderGlobalBtn');
+  const grinderSwitch = document.getElementById('grinderSwitch');
 
   function fmt(ms){
     const total = Math.max(0, Math.ceil(ms / 1000));
@@ -300,20 +366,44 @@
     return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
   }
 
+  function currentRespawnMs(){
+    return grinderActive ? Math.round(RESPAWN_MS * GRINDER_MULTIPLIER) : RESPAWN_MS;
+  }
+
+  function updateGrinderGlobalUI(){
+    grinderGlobalBtn.classList.toggle('active', grinderActive);
+    grinderGlobalBtn.setAttribute('aria-checked', grinderActive ? 'true' : 'false');
+    grinderSwitch.classList.toggle('active', grinderActive);
+  }
+
+  grinderGlobalBtn.addEventListener('click', () => {
+    grinderActive = !grinderActive;
+    updateGrinderGlobalUI();
+    saveState();
+    render();
+  });
+
   function loadState(){
     try{
       const raw = localStorage.getItem(STORAGE_KEY);
       if(raw){
         const parsed = JSON.parse(raw);
-        if(Array.isArray(parsed) && parsed.length === 5) bosses = parsed;
+        if(Array.isArray(parsed) && parsed.length === 5){
+          // Older save format: plain array of bosses, no global grinder flag yet.
+          bosses = parsed;
+        } else if(parsed && Array.isArray(parsed.bosses) && parsed.bosses.length === 5){
+          bosses = parsed.bosses;
+          grinderActive = !!parsed.grinderActive;
+        }
       }
     }catch(e){ /* no saved state yet, or storage unavailable — use defaults */ }
+    updateGrinderGlobalUI();
     render();
   }
 
   function saveState(){
     try{
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(bosses));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ bosses, grinderActive }));
     }catch(e){ console.error('Storage error', e); }
   }
 
@@ -422,21 +512,22 @@
   }
 
   function bossPhase(boss, now){
-    const remaining = boss.deadAt ? (boss.deadAt + RESPAWN_MS - now) : null;
+    const respawn = currentRespawnMs();
+    const remaining = boss.deadAt ? (boss.deadAt + respawn - now) : null;
     const isWaiting = remaining !== null && remaining > 0;
     const isReady = remaining !== null && remaining <= 0;
     const isAlive = boss.deadAt === null;
-    return { remaining, isWaiting, isReady, isAlive };
+    return { remaining, isWaiting, isReady, isAlive, respawn };
   }
 
-  // Full rebuild: call after actions that change structure (mark dead, reset, rename commit, load).
+  // Full rebuild: call after actions that change structure (mark dead, reset, rename commit, load, grinder toggle).
   // Does NOT run on the per-second timer, so it never interrupts an in-progress name edit.
   function render(){
     grid.innerHTML = '';
     const now = Date.now();
 
     bosses.forEach(boss => {
-      const { remaining, isWaiting, isReady, isAlive } = bossPhase(boss, now);
+      const { remaining, isWaiting, isReady, isAlive, respawn } = bossPhase(boss, now);
 
       if(isReady && !notified.has(boss.id)){
         notified.add(boss.id);
@@ -462,7 +553,7 @@
       const ringWrap = document.createElement('div');
       ringWrap.className = 'ring-wrap';
 
-      const pct = isWaiting ? Math.min(1, Math.max(0, 1 - remaining / RESPAWN_MS)) : (isReady ? 1 : 0);
+      const pct = isWaiting ? Math.min(1, Math.max(0, 1 - remaining / respawn)) : (isReady ? 1 : 0);
       const offset = CIRC * (1 - pct);
 
       ringWrap.innerHTML = `
@@ -514,7 +605,7 @@
     bosses.forEach(boss => {
       const ref = els[boss.id];
       if(!ref) return;
-      const { remaining, isWaiting, isReady, isAlive } = bossPhase(boss, now);
+      const { remaining, isWaiting, isReady, isAlive, respawn } = bossPhase(boss, now);
 
       // isAlive <-> !isAlive changes the reset button's presence — needs a full render.
       const hasResetBtn = !!ref.resetBtn;
@@ -534,7 +625,7 @@
       ref.statusEl.className = 'status' + (isWaiting ? ' waiting' : '') + (isReady ? ' ready' : '');
       ref.statusEl.textContent = isAlive ? 'มีชีวิต' : isWaiting ? 'กำลังเกิดใหม่' : 'พร้อมล่า!';
 
-      const pct = isWaiting ? Math.min(1, Math.max(0, 1 - remaining / RESPAWN_MS)) : (isReady ? 1 : 0);
+      const pct = isWaiting ? Math.min(1, Math.max(0, 1 - remaining / respawn)) : (isReady ? 1 : 0);
       ref.ringFg.setAttribute('stroke-dashoffset', isAlive ? CIRC : CIRC * (1 - pct));
 
       ref.timerEl.className = 'timer' + (isAlive ? ' small' : '');
