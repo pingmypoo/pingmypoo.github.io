@@ -431,7 +431,7 @@
     if(window.Notification && Notification.permission === 'granted'){
       try{
         new Notification('บอสพร้อมล่าแล้ว! 🔥', {
-          body: boss.name + ' เกิดใหม่แล้ว ไปลุยกันเลย',
+          body: boss.name + ' รีแล้วไอสัส ไปตีเอาของ',
           tag: 'boss-' + boss.id
         });
       }catch(e){ /* ignore */ }
@@ -565,7 +565,7 @@
       `;
       const timerEl = document.createElement('div');
       timerEl.className = 'timer' + (isAlive ? ' small' : '');
-      timerEl.textContent = isAlive ? 'ยังไม่ตาย' : isReady ? 'เกิดแล้ว' : fmt(remaining);
+      timerEl.textContent = isAlive ? 'ยังไม่ตี พร้อมลั่น' : isReady ? 'พร้อมลั่นแล้วสัส' : fmt(remaining);
       ringWrap.appendChild(timerEl);
 
       const actions = document.createElement('div');
@@ -573,7 +573,7 @@
 
       const mainBtn = document.createElement('button');
       mainBtn.className = 'btn btn-primary';
-      mainBtn.textContent = isAlive ? 'บอสตายแล้ว' : isReady ? 'บอสตายอีกแล้ว' : 'บอสตายแล้ว';
+      mainBtn.textContent = isAlive ? 'แห้ง' : isReady ? 'แห้งอีกแล้ว' : 'แห้งแล้ว';
       mainBtn.addEventListener('click', () => markDead(boss.id));
       actions.appendChild(mainBtn);
 
@@ -623,15 +623,15 @@
 
       ref.card.className = 'card' + (isReady ? ' ready' : '');
       ref.statusEl.className = 'status' + (isWaiting ? ' waiting' : '') + (isReady ? ' ready' : '');
-      ref.statusEl.textContent = isAlive ? 'มีชีวิต' : isWaiting ? 'กำลังเกิดใหม่' : 'พร้อมล่า!';
+      ref.statusEl.textContent = isAlive ? 'พร้อมลั่น' : isWaiting ? 'กำลังรี' : 'พร้อมล่า!';
 
       const pct = isWaiting ? Math.min(1, Math.max(0, 1 - remaining / respawn)) : (isReady ? 1 : 0);
       ref.ringFg.setAttribute('stroke-dashoffset', isAlive ? CIRC : CIRC * (1 - pct));
 
       ref.timerEl.className = 'timer' + (isAlive ? ' small' : '');
-      ref.timerEl.textContent = isAlive ? 'ยังไม่ตาย' : isReady ? 'เกิดแล้ว' : fmt(remaining);
+      ref.timerEl.textContent = isAlive ? 'ยังไม่รี' : isReady ? 'มาละพร้อมลั่น' : fmt(remaining);
 
-      ref.mainBtn.textContent = isAlive ? 'บอสตายแล้ว' : isReady ? 'บอสตายอีกแล้ว' : 'บอสตายแล้ว';
+      ref.mainBtn.textContent = isAlive ? 'บอสแห้ง' : isReady ? 'แห้งอีกแล้ว' : 'บอสแห้งแล่ว';
     });
 
     if(structuralChange) render();
