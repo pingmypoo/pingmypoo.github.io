@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab 4: K-NN Employee Classifier - Employees Dataset</title>
+  <!-- Fonts: Prompt -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Prompt', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#EEF2FF',
+              100: '#E0E7FF',
+              500: '#6366F1',
+              600: '#4F46E5',
+              700: '#4338CA',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif;
+      background: radial-gradient(circle at top, #1E1B4B 0%, #0B0F19 100%);
+      min-height: 100vh;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #6366F1;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.75);
+    }
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0F172A;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="text-slate-200 antialiased p-3 sm:p-6 lg:p-8">
+
+  <div class="max-w-7xl mx-auto space-y-6">
+    <!-- Header Banner -->
+    <header class="bg-slate-900/80 backdrop-blur-md border border-slate-700/60 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+      <div class="absolute -right-16 -top-16 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 text-white font-bold text-2xl tracking-tighter">
+            K-NN
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                Lab 4 Assignment
+              </span>
+              <span class="text-xs text-slate-400">Dataset: Employees_raw_Data.csv</span>
+              <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                Normalized Distance
+              </span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight mt-1">
+              ระบบจำแนกข้อมูลพนักงานด้วย K-Nearest Neighbors (K-NN)
+            </h1>
+            <p class="text-sm text-slate-400 mt-1">
+              คำนวณระยะห่างยุคลิด (Euclidean Distance) บนพื้นที่เวกเตอร์มาตรฐาน พร้อมระบุเพื่อนบ้านใกล้เคียง $K$ ลำดับแรก
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 self-stretch sm:self-auto bg-slate-800/80 p-2 rounded-xl border border-slate-700/50">
+          <button id="tab-predict-btn" onclick="switchTab('predict')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all bg-indigo-600 text-white shadow-md">
+            จำแนกข้อมูลทดสอบ
+          </button>
+          <button id="tab-dataset-btn" onclick="switchTab('dataset')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-all">
+            ชุดข้อมูลพนักงาน
+          </button>
+          <button id="tab-theory-btn" onclick="switchTab('theory')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-all">
+            สูตร & ทฤษฎี
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- TAB 1: PREDICTION -->
+    <main id="tab-predict" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Input Panel -->
+      <section class="lg:col-span-5 space-y-6">
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+              </svg>
+              ป้อนข้อมูลพนักงานทดสอบ (Test Sample)
+            </h2>
+            <span class="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-indigo-400 border border-indigo-500/30 font-mono">
+              Features: 4 ตัวแปร
+            </span>
+          </div>
+
+          <!-- Configuration: Target & K -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-slate-800/40 rounded-xl border border-slate-700/50">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">เป้าหมายการจำแนก (Target):</label>
+              <select id="target-mode" onchange="runKNN()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500 outline-none">
+                <option value="Department">แผนกงาน (Department)</option>
+                <option value="Performance">ระดับผลงาน (High / Standard)</option>
+              </select>
+            </div>
+            <div>
+              <div class="flex justify-between items-center text-xs font-medium text-slate-400 mb-1">
+                <span>จำนวนเพื่อนบ้าน (K):</span>
+                <span id="k-value-display" class="font-bold text-indigo-400 text-sm">K = 5</span>
+              </div>
+              <select id="k-value" onchange="document.getElementById('k-value-display').innerText = 'K = ' + this.value; runKNN();" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500 outline-none">
+                <option value="1">K = 1 (เพื่อนบ้านใกล้สุด 1 คน)</option>
+                <option value="3">K = 3 (โหวตจาก 3 คน)</option>
+                <option value="5" selected>K = 5 (โหวตจาก 5 คน - ค่ามาตรฐาน)</option>
+                <option value="7">K = 7 (โหวตจาก 7 คน)</option>
+                <option value="9">K = 9 (โหวตจาก 9 คน)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Quick Presets -->
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-2">เลือกโปรไฟล์จำลองสำเร็จรูป (Presets):</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="loadPreset('dev')" class="p-2.5 bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700 rounded-xl text-left transition-all hover:border-indigo-500/50">
+                <div class="font-semibold text-xs text-white">โปรแกรมเมอร์ (Dev)</div>
+                <div class="text-[10px] text-slate-400">เงินเดือน $85k • ประสบการณ์ 5 ปี</div>
+              </button>
+              <button onclick="loadPreset('sales')" class="p-2.5 bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700 rounded-xl text-left transition-all hover:border-amber-500/50">
+                <div class="font-semibold text-xs text-white">เจ้าหน้าที่ฝ่ายขาย (Sales)</div>
+                <div class="text-[10px] text-slate-400">เงินเดือน $62k • ประเมิน 4.8</div>
+              </button>
+              <button onclick="loadPreset('hr')" class="p-2.5 bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700 rounded-xl text-left transition-all hover:border-pink-500/50">
+                <div class="font-semibold text-xs text-white">ฝ่ายทรัพยากรบุคคล (HR)</div>
+                <div class="text-[10px] text-slate-400">เงินเดือน $48k • อายุ 28 ปี</div>
+              </button>
+              <button onclick="loadPreset('finance')" class="p-2.5 bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700 rounded-xl text-left transition-all hover:border-emerald-500/50">
+                <div class="font-semibold text-xs text-white">การเงินอาวุโส (Finance)</div>
+                <div class="text-[10px] text-slate-400">เงินเดือน $95k • ประสบการณ์ 9 ปี</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Feature Inputs -->
+          <form id="knn-form" class="space-y-4" onsubmit="event.preventDefault(); runKNN();">
+            <!-- Salary -->
+            <div class="bg-slate-800/40 p-3.5 rounded-xl border border-slate-700/40 space-y-2">
+              <div class="flex justify-between items-center text-xs">
+                <label for="salary" class="font-medium text-slate-300">1. เงินเดือนต่อปี (Salary):</label>
+                <span class="font-mono font-semibold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20" id="salary-disp">$65,000</span>
+              </div>
+              <input type="range" id="salary" min="15000" max="120000" step="1000" value="65000" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer" oninput="updateFormDisplays()">
+              <div class="flex justify-between text-[10px] text-slate-500">
+                <span>$15,000 (เริ่มต้น)</span>
+                <span>$65,000 (กลาง)</span>
+                <span>$120,000 (ผู้บริหาร)</span>
+              </div>
+            </div>
+
+            <!-- Age -->
+            <div class="bg-slate-800/40 p-3.5 rounded-xl border border-slate-700/40 space-y-2">
+              <div class="flex justify-between items-center text-xs">
+                <label for="age" class="font-medium text-slate-300">2. อายุพนักงาน (Age):</label>
+                <span class="font-mono font-semibold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20" id="age-disp">32 ปี</span>
+              </div>
+              <input type="range" id="age" min="20" max="65" step="1" value="32" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer" oninput="updateFormDisplays()">
+              <div class="flex justify-between text-[10px] text-slate-500">
+                <span>20 ปี</span>
+                <span>40 ปี</span>
+                <span>65 ปี</span>
+              </div>
+            </div>
+
+            <!-- Performance Rating -->
+            <div class="bg-slate-800/40 p-3.5 rounded-xl border border-slate-700/40 space-y-2">
+              <div class="flex justify-between items-center text-xs">
+                <label for="rating" class="font-medium text-slate-300">3. ผลการประเมินงาน (Performance Rating):</label>
+                <span class="font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20" id="rating-disp">4.2 / 5.0</span>
+              </div>
+              <input type="range" id="rating" min="1.0" max="5.0" step="0.1" value="4.2" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer" oninput="updateFormDisplays()">
+              <div class="flex justify-between text-[10px] text-slate-500">
+                <span>1.0 (ปรับปรุง)</span>
+                <span>3.0 (ปานกลาง)</span>
+                <span>5.0 (ดีเลิศ)</span>
+              </div>
+            </div>
+
+            <!-- Experience -->
+            <div class="bg-slate-800/40 p-3.5 rounded-xl border border-slate-700/40 space-y-2">
+              <div class="flex justify-between items-center text-xs">
+                <label for="experience" class="font-medium text-slate-300">4. ประสบการณ์ทำงาน (Years of Experience):</label>
+                <span class="font-mono font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20" id="experience-disp">5 ปี</span>
+              </div>
+              <input type="range" id="experience" min="1" max="15" step="1" value="5" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer" oninput="updateFormDisplays()">
+              <div class="flex justify-between text-[10px] text-slate-500">
+                <span>1 ปี (Junior)</span>
+                <span>7 ปี (Mid-Senior)</span>
+                <span>15 ปี (Lead / Director)</span>
+              </div>
+            </div>
+
+            <button type="button" onclick="runKNN()" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-semibold text-white rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 text-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              คำนวณและจำแนกด้วย K-NN
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Results & Visualizer Column -->
+      <section class="lg:col-span-7 space-y-6">
+        <!-- Main Result Card -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+            <h3 class="text-base font-semibold text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              ผลการจำแนกประเภท (K-NN Classification Result)
+            </h3>
+            <span id="vote-summary-badge" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+              Majority Vote
+            </span>
+          </div>
+
+          <!-- Highlight Prediction Box -->
+          <div id="prediction-card" class="p-6 rounded-2xl bg-indigo-950/40 border border-indigo-500/40 text-center transition-all">
+            <div class="text-xs uppercase font-bold tracking-widest text-slate-400 mb-1">
+              ผลการตัดสินจากเพื่อนบ้านที่ใกล้ที่สุด
+            </div>
+            <div id="predicted-label" class="text-3xl sm:text-4xl font-extrabold text-indigo-400 tracking-wide mb-2">
+              ENGINEERING
+            </div>
+            <p id="predicted-subtext" class="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto">
+              พนักงานตัวอย่างมีพารามิเตอร์คล้ายคลึงกับกลุ่มบุคลากรในแผนกวิศวกรรมมากที่สุด (4 จาก 5 เสียง)
+            </p>
+          </div>
+
+          <!-- Voting Distribution -->
+          <div class="mt-5 space-y-2.5">
+            <div class="text-xs font-semibold text-slate-400">สัดส่วนเสียงโหวตจากเพื่อนบ้าน K คน (Vote Distribution):</div>
+            <div id="voting-bars" class="space-y-2">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 2D Vector Space Canvas -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div>
+              <h3 class="text-base font-semibold text-white flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                </svg>
+                แผนภาพเวกเตอร์ระนาบ 2 มิติ (Normalized Feature Space)
+              </h3>
+              <p class="text-[11px] text-slate-400">แสดงตำแหน่งพนักงานและเส้นเชื่อมโยงระยะห่างไปยังเพื่อนบ้าน $K$ คน</p>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+              <span class="text-slate-400">แกน X/Y:</span>
+              <select id="canvas-axes" onchange="drawVectorSpace()" class="bg-slate-800 border border-slate-700 text-white rounded-lg px-2.5 py-1 text-xs outline-none">
+                <option value="salary-exp">เงินเดือน vs ประสบการณ์</option>
+                <option value="salary-rating">เงินเดือน vs คะแนนประเมิน</option>
+                <option value="age-salary">อายุ vs เงินเดือน</option>
+                <option value="age-exp">อายุ vs ประสบการณ์</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="relative w-full aspect-[16/9] sm:aspect-[2/1] bg-slate-950 rounded-xl overflow-hidden border border-slate-800">
+            <canvas id="knn-canvas" class="w-full h-full block"></canvas>
+            <div class="absolute bottom-2 right-3 text-[10px] text-slate-400 bg-slate-900/80 px-2 py-1 rounded border border-slate-800 pointer-events-none">
+              ★ จุดทดสอบ (Input) • เส้นปะ: เชื่อม K เพื่อนบ้าน
+            </div>
+          </div>
+        </div>
+
+        <!-- Top K Neighbors Table -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 class="text-base font-semibold text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+              รายชื่อเพื่อนบ้านที่ใกล้ที่สุด $K$ อันดับแรก (Top K Nearest Neighbors)
+            </h3>
+            <span class="text-xs text-slate-400 font-mono">Sorted by Euclidean Distance</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-800/80 text-slate-400 border-b border-slate-700">
+                <tr>
+                  <th class="py-2.5 px-3">อันดับ</th>
+                  <th class="py-2.5 px-3">ชื่อพนักงาน</th>
+                  <th class="py-2.5 px-3">แผนกจริง</th>
+                  <th class="py-2.5 px-3">เงินเดือน</th>
+                  <th class="py-2.5 px-3">อายุ</th>
+                  <th class="py-2.5 px-3">ประเมิน</th>
+                  <th class="py-2.5 px-3">ประสบการณ์</th>
+                  <th class="py-2.5 px-3 text-indigo-400">ระยะห่าง (Distance)</th>
+                  <th class="py-2.5 px-3 text-emerald-400">ความใกล้เคียง (%)</th>
+                </tr>
+              </thead>
+              <tbody id="neighbors-tbody" class="divide-y divide-slate-800 font-mono text-[11px]">
+                <!-- Injected via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- TAB 2: DATASET EXPLORER -->
+    <section id="tab-dataset" class="hidden space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div>
+            <h2 class="text-xl font-bold text-white">ชุดข้อมูลพนักงาน (Employees Dataset)</h2>
+            <p class="text-sm text-slate-400">ชุดข้อมูลตัวอย่างพนักงานสำหรับฝึกสอนโมเดล K-NN ประกอบด้วยข้อมูลเงินเดือน อายุ ผลงาน และประสบการณ์</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <input type="text" id="dataset-search" placeholder="ค้นหาชื่อ หรือ แผนก..." oninput="filterDatasetTable()" class="px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+            <select id="dataset-dep-filter" onchange="filterDatasetTable()" class="px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500">
+              <option value="all">ทุกแผนก (All)</option>
+              <option value="Engineering">Engineering</option>
+              <option value="Sales">Sales</option>
+              <option value="Finance">Finance</option>
+              <option value="Marketing">Marketing</option>
+              <option value="HR">HR</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
+            <div class="text-xs text-slate-400">พนักงานในระบบทั้งหมด</div>
+            <div class="text-2xl font-bold text-white mt-1">60 คน</div>
+            <div class="text-[11px] text-slate-500">กระจายครบ 5 แผนกงาน</div>
+          </div>
+          <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
+            <div class="text-xs text-indigo-400">เงินเดือนเฉลี่ย (Salary)</div>
+            <div class="text-2xl font-bold text-indigo-400 mt-1" id="stat-avg-salary">$66,450</div>
+            <div class="text-[11px] text-slate-500">ช่วง $28,000 - $115,000</div>
+          </div>
+          <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
+            <div class="text-xs text-emerald-400">เกรดผลงานสูง (High Perf)</div>
+            <div class="text-2xl font-bold text-emerald-400 mt-1" id="stat-high-perf">34 คน</div>
+            <div class="text-[11px] text-slate-500">คะแนนประเมิน &ge; 4.0</div>
+          </div>
+          <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
+            <div class="text-xs text-amber-400">อายุงานเฉลี่ย (Exp)</div>
+            <div class="text-2xl font-bold text-amber-400 mt-1">5.6 ปี</div>
+            <div class="text-[11px] text-slate-500">อายุเฉลี่ยรวม 36.4 ปี</div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto max-h-[500px] border border-slate-800 rounded-xl">
+          <table class="w-full text-xs text-left text-slate-300">
+            <thead class="bg-slate-800 sticky top-0 text-slate-300 border-b border-slate-700">
+              <tr>
+                <th class="py-3 px-3.5">#</th>
+                <th class="py-3 px-3.5">ชื่อพนักงาน</th>
+                <th class="py-3 px-3.5">แผนก (Department)</th>
+                <th class="py-3 px-3.5">เงินเดือน ($)</th>
+                <th class="py-3 px-3.5">อายุ (ปี)</th>
+                <th class="py-3 px-3.5">คะแนนประเมิน</th>
+                <th class="py-3 px-3.5">ประสบการณ์ (ปี)</th>
+                <th class="py-3 px-3.5">ระดับผลงาน</th>
+              </tr>
+            </thead>
+            <tbody id="dataset-table-body" class="divide-y divide-slate-800/60 font-mono">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: THEORY & FORMULAS -->
+    <section id="tab-theory" class="hidden space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl space-y-6 leading-relaxed">
+        <div class="border-b border-slate-800 pb-4">
+          <h2 class="text-2xl font-bold text-white">หลักการทางทฤษฎี: K-Nearest Neighbors (K-NN)</h2>
+          <p class="text-sm text-slate-400 mt-1">เนื้อหาทางวิชาการและสูตรคณิตศาสตร์สำหรับสรุปรายงานแล็บ (Lab 4)</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/60 space-y-3">
+            <h3 class="text-base font-semibold text-indigo-400 flex items-center gap-2">
+              1. เหตุผลที่ต้องทำ Feature Normalization ใน K-NN
+            </h3>
+            <p class="text-xs text-slate-300">
+              อัลกอริทึม K-NN ตัดสินใจโดยใช้ระยะห่างในเรขาคณิต (Geometric Distance) หากเราไม่ปรับสเกล ตัวแปรอย่าง <b>เงินเดือน ($10,000 - $120,000)</b> จะมีค่าต่างกันหลักหมื่น ในขณะที่ <b>คะแนนประเมิน (1.0 - 5.0)</b> ต่างกันเพียงหลักหน่วย ทำให้ผลต่างเงินเดือนเข้าครอบงำระยะห่างทั้งหมด
+            </p>
+            <div class="p-3 bg-slate-900 rounded-lg text-center font-mono text-xs text-amber-300">
+              X_norm = (X - X_min) / (X_max - X_min)
+            </div>
+            <p class="text-xs text-slate-400">
+              หลังการ Normalization ตัวแปรทุกตัวจะมีค่าอยู่ในช่วง [0, 1] ทำให้ทุกคุณลักษณะมีน้ำหนักต่อการตัดสินใจอย่างเท่าเทียม
+            </p>
+          </div>
+
+          <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/60 space-y-3">
+            <h3 class="text-base font-semibold text-emerald-400 flex items-center gap-2">
+              2. สูตรคำนวณระยะห่างยุคลิด (Euclidean Distance)
+            </h3>
+            <p class="text-xs text-slate-300">
+              ระยะห่างระหว่างจุดทดสอบ $P = (p_1, p_2, \dots, p_n)$ กับจุดข้อมูลพนักงานฝึกสอน $Q = (q_1, q_2, \dots, q_n)$ บนมิติ $n = 4$ คุณลักษณะ:
+            </p>
+            <div class="p-3 bg-slate-900 rounded-lg text-center font-mono text-xs text-cyan-300">
+              d(P, Q) = &radic;[ &sum; (p_i - q_i)&sup2; ]
+            </div>
+            <p class="text-xs text-slate-400">
+              ยิ่งค่า $d(P, Q)$ มีค่าน้อย แสดงว่าพนักงานสองคนมีคุณลักษณะงานและเงินเดือนใกล้เคียงกันมากที่สุด
+            </p>
+          </div>
+        </div>
+
+        <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/60 space-y-3">
+          <h3 class="text-base font-semibold text-amber-400">3. กฎการตัดสินใจด้วยเสียงข้างมาก (Majority Voting Rule)</h3>
+          <p class="text-xs text-slate-300">
+            หลังจากคำนวณระยะห่างจากข้อมูลทดสอบไปยังพนักงานทุกคนในชุดข้อมูลแล้ว ระบบจะเรียงลำดับระยะห่างจากน้อยไปหามาก และเลือกพนักงานที่ใกล้ที่สุดจำนวน $K$ คน:
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div class="p-3 bg-slate-900/80 rounded-lg border border-slate-800">
+              <span class="font-bold text-white block mb-1">การเลือกค่า K:</span>
+              <span class="text-slate-400">ควรเลือกจำนวน $K$ เป็นเลขคี่ (เช่น 1, 3, 5, 7) เพื่อลดโอกาสการเกิดคะแนนโหวตเสมอกัน (Tie-break)</span>
+            </div>
+            <div class="p-3 bg-slate-900/80 rounded-lg border border-slate-800">
+              <span class="font-bold text-white block mb-1">ผลกระทบเมื่อ K ต่ำ:</span>
+              <span class="text-slate-400">หาก $K=1$ โมเดลอาจไวต่อสัญญาณรบกวนหรือ Outlier สูงเกินไป (High Variance)</span>
+            </div>
+            <div class="p-3 bg-slate-900/80 rounded-lg border border-slate-800">
+              <span class="font-bold text-white block mb-1">ผลกระทบเมื่อ K สูง:</span>
+              <span class="text-slate-400">หาก $K$ สูงเกินไป อาจดึงข้อมูลจากกลุ่มอื่นเข้ามาปะปน ทำให้เกิดความเอนเอียง (High Bias)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="text-center text-xs text-slate-500 py-4">
+      Lab 4: การจำแนกข้อมูลด้วย K-NN (K-Nearest Neighbors) • ระบบจัดหมวดหมู่พนักงานอัจฉริยะ
+    </footer>
+  </div>
+
+  <script>
+    // 1. EMBEDDED REALISTIC EMPLOYEE DATASET (60 diverse rows representing all departments)
+    const employeeData = [
+      { id: 101, name: "สมชาย วิชัย", dept: "Engineering", salary: 88000, age: 34, rating: 4.5, exp: 6 },
+      { id: 102, name: "วิภาดา สุขใจ", dept: "HR", salary: 45000, age: 27, rating: 3.8, exp: 2 },
+      { id: 103, name: "กานต์ ธนพัฒน์", dept: "Finance", salary: 92000, age: 41, rating: 4.6, exp: 8 },
+      { id: 104, name: "อรพินท์ นวมงคล", dept: "Sales", salary: 62000, age: 29, rating: 4.7, exp: 4 },
+      { id: 105, name: "ธีรเดช เจริญผล", dept: "Marketing", salary: 54000, age: 31, rating: 4.0, exp: 3 },
+      { id: 106, name: "ณัฐพงษ์ ยอดแก้ว", dept: "Engineering", salary: 95000, age: 36, rating: 4.8, exp: 7 },
+      { id: 107, name: "ปิยะนารถ รักษ์ดี", dept: "HR", salary: 52000, age: 35, rating: 3.9, exp: 5 },
+      { id: 108, name: "ศักดิ์ชัย ศรีวิไล", dept: "Sales", salary: 71000, age: 38, rating: 4.4, exp: 6 },
+      { id: 109, name: "นภัสวรรณ รัตนา", dept: "Finance", salary: 105000, age: 45, rating: 4.9, exp: 11 },
+      { id: 110, name: "ชลธิชา แก้วคำ", dept: "Marketing", salary: 48000, age: 26, rating: 3.6, exp: 2 },
+      { id: 111, name: "พิเชษฐ์ เลิศหล้า", dept: "Engineering", salary: 78000, age: 30, rating: 4.2, exp: 4 },
+      { id: 112, name: "ศศิธร บุญมี", dept: "HR", salary: 42000, age: 25, rating: 3.5, exp: 1 },
+      { id: 113, name: "อภิสิทธิ์ ว่องไว", dept: "Sales", salary: 58000, age: 28, rating: 4.1, exp: 3 },
+      { id: 114, name: "กุลธิดา พาณิชย์", dept: "Finance", salary: 84000, age: 37, rating: 4.3, exp: 7 },
+      { id: 115, name: "ธนากร ปิ่นแก้ว", dept: "Marketing", salary: 65000, age: 33, rating: 4.5, exp: 5 },
+      { id: 116, name: "มนตรี มงคลชัย", dept: "Engineering", salary: 112000, age: 43, rating: 4.9, exp: 10 },
+      { id: 117, name: "รพีพร คงทน", dept: "HR", salary: 56000, age: 39, rating: 4.1, exp: 6 },
+      { id: 118, name: "ชัยวัฒน์ เรืองเดช", dept: "Sales", salary: 76000, age: 35, rating: 4.6, exp: 6 },
+      { id: 119, name: "พงศกร พุ่มพวง", dept: "Finance", salary: 98000, age: 42, rating: 4.7, exp: 9 },
+      { id: 120, name: "เกศรินทร์ สมบูรณ์", dept: "Marketing", salary: 51000, age: 29, rating: 3.7, exp: 3 },
+      { id: 121, name: "วรวุฒิ กล้าหาญ", dept: "Engineering", salary: 82000, age: 32, rating: 4.3, exp: 5 },
+      { id: 122, name: "ดวงเดือน เจิมจันทร์", dept: "HR", salary: 47000, age: 30, rating: 3.8, exp: 3 },
+      { id: 123, name: "ธนาวุฒิ ส่งเสริม", dept: "Sales", salary: 64000, age: 32, rating: 4.2, exp: 4 },
+      { id: 124, name: "สิริพร พงษ์ศิริ", dept: "Finance", salary: 90000, age: 39, rating: 4.5, exp: 8 },
+      { id: 125, name: "ศรัณย์ ดำรงไทย", dept: "Marketing", salary: 59000, age: 34, rating: 4.1, exp: 4 },
+      { id: 126, name: "กฤษณะ สว่างจิต", dept: "Engineering", salary: 104000, age: 40, rating: 4.8, exp: 9 },
+      { id: 127, name: "ยุพาพรรณ แจ่มใส", dept: "HR", salary: 39000, age: 24, rating: 3.4, exp: 1 },
+      { id: 128, name: "เอกลักษณ์ ก้องเกียรติ", dept: "Sales", salary: 69000, age: 36, rating: 4.4, exp: 5 },
+      { id: 129, name: "ชวลิต สิทธิชัย", dept: "Finance", salary: 115000, age: 48, rating: 5.0, exp: 12 },
+      { id: 130, name: "สุชาดา รุ่งเรือง", dept: "Marketing", salary: 55000, age: 30, rating: 4.0, exp: 3 },
+      { id: 131, name: "ปกรณ์ จันทรา", dept: "Engineering", salary: 76000, age: 29, rating: 4.1, exp: 4 },
+      { id: 132, name: "ทัศนีย์ ทรงกลด", dept: "HR", salary: 54000, age: 38, rating: 4.0, exp: 6 },
+      { id: 133, name: "บดินทร์ ชูเชิด", dept: "Sales", salary: 82000, age: 39, rating: 4.8, exp: 7 },
+      { id: 134, name: "กิตติศักดิ์ พูลเพิ่ม", dept: "Finance", salary: 89000, age: 38, rating: 4.4, exp: 7 },
+      { id: 135, name: "กชกร มนต์ตรา", dept: "Marketing", salary: 62000, age: 32, rating: 4.3, exp: 5 },
+      { id: 136, name: "อภิวัฒน์ สกุลไทย", dept: "Engineering", salary: 91000, age: 35, rating: 4.6, exp: 7 },
+      { id: 137, name: "ลลิตา ธนาธิป", dept: "HR", salary: 49000, age: 31, rating: 3.9, exp: 4 },
+      { id: 138, name: "อัครพล ชวนชื่น", dept: "Sales", salary: 60000, age: 30, rating: 4.0, exp: 3 },
+      { id: 139, name: "สมพร พงษ์เพชร", dept: "Finance", salary: 94000, age: 40, rating: 4.6, exp: 8 },
+      { id: 140, name: "ชัชวาล วัฒนกุล", dept: "Marketing", salary: 53000, age: 28, rating: 3.9, exp: 3 },
+      { id: 141, name: "เจษฎา ปิ่นโต", dept: "Engineering", salary: 85000, age: 33, rating: 4.4, exp: 5 },
+      { id: 142, name: "อัญชลี รักษาสัตย์", dept: "HR", salary: 46000, age: 29, rating: 3.7, exp: 2 },
+      { id: 143, name: "ภูวดล ชื่นใจ", dept: "Sales", salary: 73000, age: 37, rating: 4.5, exp: 6 },
+      { id: 144, name: "พิมพาภรณ์ ไพบูลย์", dept: "Finance", salary: 101000, age: 44, rating: 4.8, exp: 10 },
+      { id: 145, name: "ณัฐพล พลเดช", dept: "Marketing", salary: 67000, age: 35, rating: 4.6, exp: 6 },
+      { id: 146, name: "สุรชัย ใจซื่อ", dept: "Engineering", salary: 99000, age: 38, rating: 4.7, exp: 8 },
+      { id: 147, name: "จิราพร หอมหวล", dept: "HR", salary: 50000, age: 33, rating: 3.8, exp: 4 },
+      { id: 148, name: "รังสรรค์ แสงทอง", dept: "Sales", salary: 66000, age: 33, rating: 4.3, exp: 4 },
+      { id: 149, name: "เกรียงศักดิ์ รุ่งโรจน์", dept: "Finance", salary: 87000, age: 36, rating: 4.2, exp: 6 },
+      { id: 150, name: "เมทินี ศิริกุล", dept: "Marketing", salary: 49000, age: 27, rating: 3.5, exp: 2 },
+      { id: 151, name: "วรภัทร บุญญา", dept: "Engineering", salary: 80000, age: 31, rating: 4.3, exp: 4 },
+      { id: 152, name: "สุนิสา วงศ์คำ", dept: "HR", salary: 43000, age: 26, rating: 3.6, exp: 2 },
+      { id: 153, name: "ธนวัฒน์ พรมมา", dept: "Sales", salary: 68000, age: 34, rating: 4.3, exp: 5 },
+      { id: 154, name: "ประสิทธิ์ ชื่นกมล", dept: "Finance", salary: 96000, age: 42, rating: 4.7, exp: 9 },
+      { id: 155, name: "นริศรา ทองใบ", dept: "Marketing", salary: 58000, age: 31, rating: 4.1, exp: 4 },
+      { id: 156, name: "อนุชา กาญจนพงศ์", dept: "Engineering", salary: 108000, age: 42, rating: 4.9, exp: 11 },
+      { id: 157, name: "ปรียานุช รัตนมณี", dept: "HR", salary: 58000, age: 41, rating: 4.2, exp: 7 },
+      { id: 158, name: "พงศธร ขจรเกียรติ", dept: "Sales", salary: 75000, age: 36, rating: 4.5, exp: 6 },
+      { id: 159, name: "สุรเชษฐ์ เมธากุล", dept: "Finance", salary: 110000, age: 46, rating: 4.9, exp: 11 },
+      { id: 160, name: "อรุณี โพธิ์ศรี", dept: "Marketing", salary: 63000, age: 33, rating: 4.4, exp: 5 }
+    ];
+
+    const featureKeys = ['salary', 'age', 'rating', 'exp'];
+
+    // Department Theme Colors
+    const deptColors = {
+      Engineering: { text: '#818CF8', bg: 'rgba(129, 140, 248, 0.15)', border: '#6366F1' },
+      Sales: { text: '#F59E0B', bg: 'rgba(245, 158, 11, 0.15)', border: '#D97706' },
+      Finance: { text: '#10B981', bg: 'rgba(16, 185, 129, 0.15)', border: '#059669' },
+      Marketing: { text: '#38BDF8', bg: 'rgba(56, 189, 248, 0.15)', border: '#0284C7' },
+      HR: { text: '#F472B6', bg: 'rgba(244, 114, 182, 0.15)', border: '#DB2777' }
+    };
+
+    const perfColors = {
+      'High Performance': { text: '#34D399', bg: 'rgba(52, 211, 153, 0.15)', border: '#059669' },
+      'Standard Performance': { text: '#94A3B8', bg: 'rgba(148, 163, 184, 0.15)', border: '#64748B' }
+    };
+
+    // Calculate Min and Max for each feature across the dataset
+    let minMaxBounds = {};
+    function computeBounds() {
+      featureKeys.forEach(f => {
+        const vals = employeeData.map(d => d[f]);
+        minMaxBounds[f] = {
+          min: Math.min(...vals),
+          max: Math.max(...vals)
+        };
+      });
+    }
+
+    // Min-Max Normalization function
+    function normalizeValue(val, key) {
+      const b = minMaxBounds[key];
+      if (b.max === b.min) return 0;
+      return (val - b.min) / (b.max - b.min);
+    }
+
+    // Euclidean distance calculation on normalized coordinates
+    function calculateDistance(sampleNorm, pointNorm) {
+      let sumSq = 0;
+      featureKeys.forEach(f => {
+        const diff = sampleNorm[f] - pointNorm[f];
+        sumSq += diff * diff;
+      });
+      return Math.sqrt(sumSq);
+    }
+
+    // Main K-NN Classifier Execution
+    let lastNeighbors = [];
+    let currentInputNorm = {};
+    let currentInputRaw = {};
+
+    function runKNN() {
+      const k = parseInt(document.getElementById('k-value').value);
+      const targetMode = document.getElementById('target-mode').value; // 'Department' or 'Performance'
+
+      currentInputRaw = {
+        salary: parseFloat(document.getElementById('salary').value),
+        age: parseFloat(document.getElementById('age').value),
+        rating: parseFloat(document.getElementById('rating').value),
+        exp: parseFloat(document.getElementById('experience').value)
+      };
+
+      currentInputNorm = {
+        salary: normalizeValue(currentInputRaw.salary, 'salary'),
+        age: normalizeValue(currentInputRaw.age, 'age'),
+        rating: normalizeValue(currentInputRaw.rating, 'rating'),
+        exp: normalizeValue(currentInputRaw.exp, 'exp')
+      };
+
+      // Calculate distance to all records
+      const distancesList = employeeData.map(emp => {
+        const empNorm = {
+          salary: normalizeValue(emp.salary, 'salary'),
+          age: normalizeValue(emp.age, 'age'),
+          rating: normalizeValue(emp.rating, 'rating'),
+          exp: normalizeValue(emp.exp, 'exp')
+        };
+        const dist = calculateDistance(currentInputNorm, empNorm);
+        
+        // Determine class depending on mode
+        const targetClass = targetMode === 'Department' 
+          ? emp.dept 
+          : (emp.rating >= 4.0 ? 'High Performance' : 'Standard Performance');
+
+        return {
+          ...emp,
+          norm: empNorm,
+          distance: dist,
+          targetClass: targetClass
+        };
+      });
+
+      // Sort by Euclidean distance ascending
+      distancesList.sort((a, b) => a.distance - b.distance);
+
+      // Select Top K
+      const topK = distancesList.slice(0, k);
+      lastNeighbors = topK;
+
+      // Majority voting tally
+      const votes = {};
+      topK.forEach(neighbor => {
+        votes[neighbor.targetClass] = (votes[neighbor.targetClass] || 0) + 1;
+      });
+
+      // Determine Winner
+      let winningClass = '';
+      let maxVotes = -1;
+      for (const [cls, count] of Object.entries(votes)) {
+        if (count > maxVotes) {
+          maxVotes = count;
+          winningClass = cls;
+        }
+      }
+
+      // Update UI Result Badges
+      const predictedLabel = document.getElementById('predicted-label');
+      const predictedSubtext = document.getElementById('predicted-subtext');
+      const card = document.getElementById('prediction-card');
+      const voteSummaryBadge = document.getElementById('vote-summary-badge');
+
+      predictedLabel.textContent = winningClass.toUpperCase();
+      voteSummaryBadge.textContent = `${maxVotes} จาก ${k} เสียงโหวต (${((maxVotes/k)*100).toFixed(0)}%)`;
+
+      const theme = targetMode === 'Department' ? (deptColors[winningClass] || deptColors.Engineering) : perfColors[winningClass];
+      predictedLabel.style.color = theme.text;
+      card.style.borderColor = theme.border;
+      card.style.backgroundColor = theme.bg;
+
+      if (targetMode === 'Department') {
+        predictedSubtext.textContent = `พนักงานมีคุณลักษณะงานใกล้เคียงกับบุคลากรในแผนก ${winningClass} มากที่สุด (คะแนนโหวต ${maxVotes}/${k} เสียง)`;
+      } else {
+        predictedSubtext.textContent = `จัดอยู่ในกลุ่ม ${winningClass} โดยอ้างอิงจากเพื่อนบ้านที่มีรูปแบบเงินเดือน ประสบการณ์ และผลงานคล้ายคลึงกัน`;
+      }
+
+      // Render Voting Bars
+      const votingBarsContainer = document.getElementById('voting-bars');
+      votingBarsContainer.innerHTML = '';
+
+      Object.entries(votes).sort((a, b) => b[1] - a[1]).forEach(([cls, count]) => {
+        const pct = ((count / k) * 100).toFixed(1);
+        const clsTheme = targetMode === 'Department' ? deptColors[cls] : perfColors[cls];
+        
+        const barWrapper = document.createElement('div');
+        barWrapper.className = "space-y-1";
+        barWrapper.innerHTML = `
+          <div class="flex justify-between text-xs font-medium">
+            <span class="flex items-center gap-1.5" style="color: ${clsTheme.text}">
+              <span class="w-2 h-2 rounded-full" style="background-color: ${clsTheme.border}"></span>
+              ${cls}
+            </span>
+            <span class="text-white font-mono font-bold">${count}/${k} คน (${pct}%)</span>
+          </div>
+          <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-700/80">
+            <div class="h-full rounded-full transition-all duration-500" style="width: ${pct}%; background-color: ${clsTheme.border}"></div>
+          </div>
+        `;
+        votingBarsContainer.appendChild(barWrapper);
+      });
+
+      // Populate Top K Table
+      const tbody = document.getElementById('neighbors-tbody');
+      tbody.innerHTML = '';
+
+      topK.forEach((item, index) => {
+        // Similarity % = max(0, (1 - dist / 2)) * 100
+        const simPct = Math.max(0, (1 - (item.distance / 2)) * 100).toFixed(1);
+        const clsTheme = targetMode === 'Department' ? deptColors[item.dept] : perfColors[item.targetClass];
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-800/40 transition-colors";
+        tr.innerHTML = `
+          <td class="py-2 px-3 text-slate-400 font-bold">#${index + 1}</td>
+          <td class="py-2 px-3 text-white font-sans font-medium">${item.name}</td>
+          <td class="py-2 px-3">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold" style="color: ${clsTheme.text}; background-color: ${clsTheme.bg}; border: 1px solid ${clsTheme.border}40;">
+              ${item.dept}
+            </span>
+          </td>
+          <td class="py-2 px-3 font-mono">$${item.salary.toLocaleString()}</td>
+          <td class="py-2 px-3 font-mono">${item.age} ปี</td>
+          <td class="py-2 px-3 font-mono">${item.rating.toFixed(1)}</td>
+          <td class="py-2 px-3 font-mono">${item.exp} ปี</td>
+          <td class="py-2 px-3 text-indigo-400 font-bold font-mono">${item.distance.toFixed(4)}</td>
+          <td class="py-2 px-3 text-emerald-400 font-bold font-mono">${simPct}%</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Draw vector plot
+      drawVectorSpace();
+    }
+
+    // 2D Vector Space Canvas Drawing
+    function drawVectorSpace() {
+      const canvas = document.getElementById('knn-canvas');
+      if (!canvas) return;
+
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio || 600;
+      canvas.height = rect.height * window.devicePixelRatio || 300;
+
+      const ctx = canvas.getContext('2d');
+      ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+
+      const w = rect.width;
+      const h = rect.height;
+      const pad = 40;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Selected axes
+      const axesChoice = document.getElementById('canvas-axes').value;
+      let xKey = 'salary';
+      let yKey = 'exp';
+      let xLabel = 'เงินเดือน (Salary)';
+      let yLabel = 'ประสบการณ์ (Exp)';
+
+      if (axesChoice === 'salary-rating') {
+        xKey = 'salary'; yKey = 'rating';
+        xLabel = 'เงินเดือน (Salary)'; yLabel = 'คะแนนผลงาน (Rating)';
+      } else if (axesChoice === 'age-salary') {
+        xKey = 'age'; yKey = 'salary';
+        xLabel = 'อายุ (Age)'; yLabel = 'เงินเดือน (Salary)';
+      } else if (axesChoice === 'age-exp') {
+        xKey = 'age'; yKey = 'exp';
+        xLabel = 'อายุ (Age)'; yLabel = 'ประสบการณ์ (Exp)';
+      }
+
+      // Draw Grid Lines & Axes
+      ctx.strokeStyle = '#1E293B';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const xPos = pad + (i / 4) * (w - pad * 2);
+        const yPos = pad + (i / 4) * (h - pad * 2);
+
+        ctx.beginPath();
+        ctx.moveTo(xPos, pad);
+        ctx.lineTo(xPos, h - pad);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(pad, yPos);
+        ctx.lineTo(w - pad, yPos);
+        ctx.stroke();
+      }
+
+      // Axis Labels
+      ctx.fillStyle = '#64748B';
+      ctx.font = '10px Prompt, sans-serif';
+      ctx.fillText(xLabel + ' (0.0 -> 1.0)', w / 2 - 40, h - 12);
+      ctx.save();
+      ctx.translate(14, h / 2 + 30);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(yLabel + ' (0.0 -> 1.0)', 0, 0);
+      ctx.restore();
+
+      // Coordinates mapping helper
+      function getCoords(normX, normY) {
+        return {
+          x: pad + normX * (w - pad * 2),
+          y: (h - pad) - normY * (h - pad * 2)
+        };
+      }
+
+      const inputCoords = getCoords(currentInputNorm[xKey], currentInputNorm[yKey]);
+
+      // Draw dashed connection lines to Top K Neighbors
+      lastNeighbors.forEach(nb => {
+        const nbCoords = getCoords(nb.norm[xKey], nb.norm[yKey]);
+        ctx.strokeStyle = 'rgba(99, 102, 241, 0.4)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(inputCoords.x, inputCoords.y);
+        ctx.lineTo(nbCoords.x, nbCoords.y);
+        ctx.stroke();
+      });
+      ctx.setLineDash([]);
+
+      // Draw all employee dataset points
+      employeeData.forEach(emp => {
+        const nx = normalizeValue(emp[xKey], xKey);
+        const ny = normalizeValue(emp[yKey], yKey);
+        const pt = getCoords(nx, ny);
+
+        const isNeighbor = lastNeighbors.some(n => n.id === emp.id);
+        const color = deptColors[emp.dept]?.border || '#94A3B8';
+
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, isNeighbor ? 6 : 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = isNeighbor ? color : '#334155';
+        ctx.fill();
+
+        if (isNeighbor) {
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+      });
+
+      // Draw Test Input Point (Glowing Star/Diamond)
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(inputCoords.x, inputCoords.y, 8, 0, Math.PI * 2);
+      ctx.fillStyle = '#6366F1';
+      ctx.shadowColor = '#818CF8';
+      ctx.shadowBlur = 12;
+      ctx.fill();
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+      ctx.restore();
+
+      // Label on Input Point
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 10px Prompt, sans-serif';
+      ctx.fillText('คุณอยู่ที่นี่ (Input)', inputCoords.x + 12, inputCoords.y - 4);
+    }
+
+    function updateFormDisplays() {
+      const salary = document.getElementById('salary').value;
+      const age = document.getElementById('age').value;
+      const rating = document.getElementById('rating').value;
+      const experience = document.getElementById('experience').value;
+
+      document.getElementById('salary-disp').innerText = '$' + Number(salary).toLocaleString();
+      document.getElementById('age-disp').innerText = age + ' ปี';
+      document.getElementById('rating-disp').innerText = Number(rating).toFixed(1) + ' / 5.0';
+      document.getElementById('experience-disp').innerText = experience + ' ปี';
+
+      runKNN();
+    }
+
+    function loadPreset(role) {
+      if (role === 'dev') {
+        document.getElementById('salary').value = 85000;
+        document.getElementById('age').value = 32;
+        document.getElementById('rating').value = 4.6;
+        document.getElementById('experience').value = 5;
+      } else if (role === 'sales') {
+        document.getElementById('salary').value = 62000;
+        document.getElementById('age').value = 30;
+        document.getElementById('rating').value = 4.8;
+        document.getElementById('experience').value = 4;
+      } else if (role === 'hr') {
+        document.getElementById('salary').value = 48000;
+        document.getElementById('age').value = 28;
+        document.getElementById('rating').value = 3.8;
+        document.getElementById('experience').value = 3;
+      } else if (role === 'finance') {
+        document.getElementById('salary').value = 95000;
+        document.getElementById('age').value = 42;
+        document.getElementById('rating').value = 4.7;
+        document.getElementById('experience').value = 9;
+      }
+      updateFormDisplays();
+    }
+
+    function switchTab(tabId) {
+      document.getElementById('tab-predict').classList.add('hidden');
+      document.getElementById('tab-dataset').classList.add('hidden');
+      document.getElementById('tab-theory').classList.add('hidden');
+
+      const tabs = ['predict', 'dataset', 'theory'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-${t}-btn`);
+        btn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-all";
+      });
+
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tab-${tabId}-btn`);
+      activeBtn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all bg-indigo-600 text-white shadow-md";
+
+      if (tabId === 'predict') {
+        setTimeout(drawVectorSpace, 50);
+      }
+    }
+
+    function renderDatasetTable(list) {
+      const tbody = document.getElementById('dataset-table-body');
+      tbody.innerHTML = '';
+
+      list.forEach((item, index) => {
+        const isHigh = item.rating >= 4.0;
+        const deptTheme = deptColors[item.dept] || deptColors.Engineering;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-800/50 transition-colors";
+        tr.innerHTML = `
+          <td class="py-2.5 px-3.5 text-slate-500 font-mono">${index + 1}</td>
+          <td class="py-2.5 px-3.5 font-sans font-semibold text-white">${item.name}</td>
+          <td class="py-2.5 px-3.5">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold" style="color: ${deptTheme.text}; background-color: ${deptTheme.bg}; border: 1px solid ${deptTheme.border}30;">
+              ${item.dept}
+            </span>
+          </td>
+          <td class="py-2.5 px-3.5 font-mono">$${item.salary.toLocaleString()}</td>
+          <td class="py-2.5 px-3.5 font-mono">${item.age} ปี</td>
+          <td class="py-2.5 px-3.5 font-mono font-medium ${isHigh ? 'text-emerald-400' : 'text-slate-300'}">${item.rating.toFixed(1)}</td>
+          <td class="py-2.5 px-3.5 font-mono">${item.exp} ปี</td>
+          <td class="py-2.5 px-3.5">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${isHigh ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-slate-700/40 text-slate-400 border border-slate-600'}">
+              ${isHigh ? 'High' : 'Standard'}
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterDatasetTable() {
+      const search = document.getElementById('dataset-search').value.toLowerCase();
+      const dep = document.getElementById('dataset-dep-filter').value;
+
+      const filtered = employeeData.filter(d => {
+        const matchText = d.name.toLowerCase().includes(search) || d.dept.toLowerCase().includes(search);
+        const matchDep = (dep === 'all') || (d.dept === dep);
+        return matchText && matchDep;
+      });
+
+      renderDatasetTable(filtered);
+    }
+
+    window.onload = function() {
+      computeBounds();
+      updateFormDisplays();
+      renderDatasetTable(employeeData);
+
+      // Window resize re-draw for canvas
+      window.addEventListener('resize', () => {
+        if (!document.getElementById('tab-predict').classList.contains('hidden')) {
+          drawVectorSpace();
+        }
+      });
+    };
+  </script>
+</body>
+</html>
