@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab 3: Naive Bayes Classification - MCU Movies</title>
+  <!-- Google Fonts & Tailwind CSS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Prompt', 'sans-serif'],
+          },
+          colors: {
+            marvel: {
+              red: '#E23636',
+              dark: '#0F172A',
+              card: '#1E293B',
+              border: '#334155',
+              gold: '#F59E0B'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif;
+      background: radial-gradient(circle at top, #1E1B4B 0%, #0F172A 100%);
+      min-height: 100vh;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #E23636;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(226, 54, 54, 0.7);
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0F172A;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body class="text-slate-200 antialiased p-3 sm:p-6 lg:p-8">
+
+  <div class="max-w-7xl mx-auto space-y-6">
+    <!-- Header Banner -->
+    <header class="bg-slate-900/80 backdrop-blur-md border border-slate-700/60 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+      <div class="absolute -right-16 -top-16 w-64 h-64 bg-red-600/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-xl bg-gradient-to-tr from-red-600 to-amber-500 flex items-center justify-center shadow-lg shadow-red-500/20 text-white font-bold text-2xl tracking-tighter">
+            MCU
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">
+                Lab 3 Assignment
+              </span>
+              <span class="text-xs text-slate-400">Gaussian Naive Bayes Model</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight mt-1">
+              การจำแนกข้อมูลภาพยนตร์ MCU ด้วย Naive Bayes
+            </h1>
+            <p class="text-sm text-slate-400 mt-1">
+              ทำนายระดับความสำเร็จ: <span class="text-amber-400 font-medium">Blockbuster</span> (รายได้ $\ge$ 700M USD) vs <span class="text-blue-400 font-medium">Regular</span>
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 self-stretch sm:self-auto bg-slate-800/80 p-2 rounded-xl border border-slate-700/50">
+          <button id="tab-predict-btn" onclick="switchTab('predict')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all bg-red-600 text-white shadow-md">
+            จำแนกผลลัพธ์
+          </button>
+          <button id="tab-dataset-btn" onclick="switchTab('dataset')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-all">
+            ชุดข้อมูล MCU (33 เรื่อง)
+          </button>
+          <button id="tab-theory-btn" onclick="switchTab('theory')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-all">
+            สูตร & ทฤษฎี
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN TAB: PREDICTION -->
+    <main id="tab-predict" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Input Column -->
+      <section class="lg:col-span-6 space-y-6">
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+              กรอกข้อมูล Features เพื่อทดสอบ (Test Input)
+            </h2>
+            <span class="text-xs px-2 py-1 rounded bg-slate-800 text-slate-400 border border-slate-700">5 Features</span>
+          </div>
+
+          <!-- Presets -->
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-2">เลือกค่าตัวอย่างด่วน (Quick Presets):</label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button onclick="loadPreset('avengers')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700/60 rounded-xl text-xs text-left transition-all hover:border-red-500/50">
+                <div class="font-semibold text-white truncate">The Avengers</div>
+                <div class="text-[10px] text-amber-400">Blockbuster แท้</div>
+              </button>
+              <button onclick="loadPreset('antman')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700/60 rounded-xl text-xs text-left transition-all hover:border-blue-500/50">
+                <div class="font-semibold text-white truncate">Ant-Man</div>
+                <div class="text-[10px] text-blue-400">Regular มาตรฐาน</div>
+              </button>
+              <button onclick="loadPreset('marvels')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700/60 rounded-xl text-xs text-left transition-all hover:border-purple-500/50">
+                <div class="font-semibold text-white truncate">The Marvels</div>
+                <div class="text-[10px] text-purple-400">ทุนสูงแต่เปิดตัวต่ำ</div>
+              </button>
+              <button onclick="loadPreset('spiderman')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700/60 rounded-xl text-xs text-left transition-all hover:border-red-500/50">
+                <div class="font-semibold text-white truncate">No Way Home</div>
+                <div class="text-[10px] text-emerald-400">Super Blockbuster</div>
+              </button>
+            </div>
+          </div>
+
+          <form id="prediction-form" class="space-y-4" onsubmit="event.preventDefault(); runNaiveBayes();">
+            <!-- Feature 1: Production Budget -->
+            <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 space-y-2">
+              <div class="flex justify-between items-center text-sm">
+                <label for="budget" class="font-medium text-slate-300">1. ทุนสร้างภาพยนตร์ (Production Budget)</label>
+                <span class="text-xs font-semibold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20" id="budget-display">$200,000,000</span>
+              </div>
+              <input type="range" id="budget" min="100000000" max="400000000" step="5000000" value="200000000" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer" oninput="updateValues()">
+              <div class="flex justify-between text-[11px] text-slate-500">
+                <span>$100M (ทุนต่ำ)</span>
+                <span>$250M (ฟอร์มใหญ่)</span>
+                <span>$400M (Avengers)</span>
+              </div>
+            </div>
+
+            <!-- Feature 2: Opening Weekend -->
+            <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 space-y-2">
+              <div class="flex justify-between items-center text-sm">
+                <label for="opening" class="font-medium text-slate-300">2. รายได้เปิดตัวสัปดาห์แรก (Opening Weekend)</label>
+                <span class="text-xs font-semibold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20" id="opening-display">$150,000,000</span>
+              </div>
+              <input type="range" id="opening" min="30000000" max="360000000" step="2000000" value="150000000" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer" oninput="updateValues()">
+              <div class="flex justify-between text-[11px] text-slate-500">
+                <span>$30M</span>
+                <span>$90.7M (จุดตัดเกณฑ์)</span>
+                <span>$360M (Endgame)</span>
+              </div>
+            </div>
+
+            <!-- Feature 3: Tomato Meter -->
+            <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 space-y-2">
+              <div class="flex justify-between items-center text-sm">
+                <label for="tomato" class="font-medium text-slate-300">3. คะแนนนักวิจารณ์ Rotten Tomatoes</label>
+                <span class="text-xs font-semibold text-red-400 bg-red-400/10 px-2 py-0.5 rounded border border-red-400/20" id="tomato-display">85%</span>
+              </div>
+              <input type="range" id="tomato" min="30" max="100" step="1" value="85" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer" oninput="updateValues()">
+              <div class="flex justify-between text-[11px] text-slate-500">
+                <span>30% (มะเขือเน่า)</span>
+                <span>75% (มะเขือสด)</span>
+                <span>100% (สมบูรณ์แบบ)</span>
+              </div>
+            </div>
+
+            <!-- Feature 4: Audience Score -->
+            <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 space-y-2">
+              <div class="flex justify-between items-center text-sm">
+                <label for="audience" class="font-medium text-slate-300">4. คะแนนความพึงพอใจของผู้ชม (Audience Score)</label>
+                <span class="text-xs font-semibold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20" id="audience-display">88%</span>
+              </div>
+              <input type="range" id="audience" min="40" max="100" step="1" value="88" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer" oninput="updateValues()">
+              <div class="flex justify-between text-[11px] text-slate-500">
+                <span>40%</span>
+                <span>80%</span>
+                <span>100%</span>
+              </div>
+            </div>
+
+            <!-- Feature 5: Duration -->
+            <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 space-y-2">
+              <div class="flex justify-between items-center text-sm">
+                <label for="duration" class="font-medium text-slate-300">5. ความยาวภาพยนตร์ (Movie Duration)</label>
+                <span class="text-xs font-semibold text-cyan-400 bg-cyan-400/10 px-2 py-0.5 rounded border border-cyan-400/20" id="duration-display">135 นาที</span>
+              </div>
+              <input type="range" id="duration" min="95" max="190" step="1" value="135" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer" oninput="updateValues()">
+              <div class="flex justify-between text-[11px] text-slate-500">
+                <span>95 นาที (~1.5 ชม.)</span>
+                <span>127.5 นาที (จุดแบ่ง)</span>
+                <span>190 นาที (~3 ชม.)</span>
+              </div>
+            </div>
+
+            <div class="pt-2 flex gap-3">
+              <button type="button" onclick="runNaiveBayes()" class="w-full py-3.5 px-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 font-semibold text-white rounded-xl shadow-lg shadow-red-600/30 transition-all flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                ประมวลผลการจำแนก (Classify with Naive Bayes)
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Results & Breakdown Column -->
+      <section class="lg:col-span-6 space-y-6">
+        <!-- Main Result Card -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+            <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              ผลการจำแนก (Classification Result)
+            </h2>
+            <span class="text-xs text-slate-400">argmax P(C|X)</span>
+          </div>
+
+          <!-- Big Badge -->
+          <div id="result-box" class="p-6 rounded-2xl bg-slate-800/80 border border-slate-700 text-center transition-all">
+            <div class="text-xs uppercase font-bold tracking-widest text-slate-400 mb-1">ผลการพยากรณ์จากโมเดล</div>
+            <div id="predicted-class" class="text-3xl sm:text-4xl font-extrabold text-amber-400 tracking-wide mb-2">
+              BLOCKBUSTER
+            </div>
+            <p id="prediction-desc" class="text-sm text-slate-300 max-w-md mx-auto">
+              ภาพยนตร์มีแนวโน้มทำรายได้ทั่วโลกเกิน 700 ล้านดอลลาร์สหรัฐ (เข้ากลุ่มหนังฟอร์มยักษ์สำเร็จสูง)
+            </p>
+          </div>
+
+          <!-- Probability Bars -->
+          <div class="mt-6 space-y-4">
+            <div>
+              <div class="flex justify-between text-sm mb-1.5 font-medium">
+                <span class="flex items-center gap-2 text-amber-400">
+                  <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                  P(Blockbuster | X)
+                </span>
+                <span id="prob-blockbuster" class="font-bold text-white">96.84%</span>
+              </div>
+              <div class="w-full bg-slate-800 h-3.5 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                <div id="bar-blockbuster" class="bg-gradient-to-r from-amber-500 to-red-500 h-full rounded-full transition-all duration-500" style="width: 96.84%;"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-sm mb-1.5 font-medium">
+                <span class="flex items-center gap-2 text-blue-400">
+                  <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                  P(Regular | X)
+                </span>
+                <span id="prob-regular" class="font-bold text-white">3.16%</span>
+              </div>
+              <div class="w-full bg-slate-800 h-3.5 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                <div id="bar-regular" class="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-500" style="width: 3.16%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step-by-Step Bayes Breakdown -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 class="text-base font-semibold text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+              </svg>
+              ขั้นตอนการคำนวณ Gaussian Naive Bayes
+            </h3>
+            <span class="text-xs text-indigo-400 font-mono">Step-by-Step Math</span>
+          </div>
+
+          <!-- Prior Probabilities -->
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="p-3 bg-slate-800/60 rounded-xl border border-slate-700/50">
+              <span class="text-slate-400 block mb-1">1. Prior: P(Blockbuster)</span>
+              <div class="font-bold text-sm text-amber-400" id="prior-bb">17 / 33 = 51.52%</div>
+            </div>
+            <div class="p-3 bg-slate-800/60 rounded-xl border border-slate-700/50">
+              <span class="text-slate-400 block mb-1">1. Prior: P(Regular)</span>
+              <div class="font-bold text-sm text-blue-400" id="prior-reg">16 / 33 = 48.48%</div>
+            </div>
+          </div>
+
+          <!-- Feature Likelihoods Table -->
+          <div>
+            <div class="text-xs text-slate-400 mb-2 font-medium">2. Likelihood แต่ละฟีเจอร์ $P(x_i | C)$ จากการแจกแจงแบบเกาส์เซียน:</div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs text-left text-slate-300">
+                <thead class="bg-slate-800/80 text-slate-400 border-b border-slate-700">
+                  <tr>
+                    <th class="py-2 px-2.5">Feature ($x_i$)</th>
+                    <th class="py-2 px-2.5">ค่าที่ป้อน</th>
+                    <th class="py-2 px-2.5 text-amber-400">P(x | Blockbuster)</th>
+                    <th class="py-2 px-2.5 text-blue-400">P(x | Regular)</th>
+                  </tr>
+                </thead>
+                <tbody id="likelihood-tbody" class="divide-y divide-slate-800 font-mono text-[11px]">
+                  <!-- Injected via JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Posterior Summary Note -->
+          <div class="p-3.5 bg-slate-800/50 rounded-xl border border-slate-700/60 text-xs text-slate-300 space-y-1">
+            <div class="font-semibold text-white">3. คำนวณความน่าจะเป็นภายหลัง (Posterior):</div>
+            <div class="font-mono text-slate-400 text-[11px] leading-relaxed">
+              $P(C | X) \propto P(C) \times \prod_{i=1}^{5} P(x_i | C)$
+            </div>
+            <div id="posterior-summary-text" class="text-slate-300 pt-1">
+              ผลคูณของความน่าจะเป็นและ Likelihood ของกลุ่ม Blockbuster ให้ค่าสัมพัทธ์สูงกว่า จึงจำแนกเป็น Blockbuster
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- SECOND TAB: DATASET VIEW -->
+    <section id="tab-dataset" class="hidden space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div>
+            <h2 class="text-xl font-bold text-white">ชุดข้อมูลภาพยนตร์ Marvel (MCU Dataset)</h2>
+            <p class="text-sm text-slate-400">คัดกรองเฉพาะภาพยนตร์ 33 เรื่องที่มีสถิติบ็อกซ์ออฟฟิศครบถ้วน ใช้ในการฝึกสอนโมเดล Naive Bayes</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <input type="text" id="dataset-search" placeholder="ค้นหาชื่อหนัง..." oninput="filterDatasetTable()" class="px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500">
+            <select id="dataset-filter" onchange="filterDatasetTable()" class="px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-red-500">
+              <option value="all">ทุกกลุ่ม (ทั้งหมด 33)</option>
+              <option value="Blockbuster">เฉพาะ Blockbuster (17)</option>
+              <option value="Regular">เฉพาะ Regular (16)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
+            <div class="text-xs text-slate-400">จำนวนภาพยนตร์ทั้งหมด</div>
+            <div class="text-2xl font-bold text-white mt-1">33 เรื่อง</div>
+            <div class="text-[11px] text-slate-500">ตัดซีรีส์ที่ไม่มีข้อมูล Box Office ออก</div>
+          </div>
+          <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
+            <div class="text-xs text-amber-400">กลุ่ม Blockbuster (≥ $700M)</div>
+            <div class="text-2xl font-bold text-amber-400 mt-1">17 เรื่อง</div>
+            <div class="text-[11px] text-slate-500">สัดส่วน 51.52%</div>
+          </div>
+          <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
+            <div class="text-xs text-blue-400">กลุ่ม Regular (&lt; $700M)</div>
+            <div class="text-2xl font-bold text-blue-400 mt-1">16 เรื่อง</div>
+            <div class="text-[11px] text-slate-500">สัดส่วน 48.48%</div>
+          </div>
+          <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
+            <div class="text-xs text-emerald-400">รายได้เฉลี่ยรวม</div>
+            <div class="text-2xl font-bold text-emerald-400 mt-1">$908.5M</div>
+            <div class="text-[11px] text-slate-500">สูงสุดคือ Avengers: Endgame ($2.79B)</div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto max-h-[500px] border border-slate-800 rounded-xl">
+          <table class="w-full text-xs text-left text-slate-300">
+            <thead class="bg-slate-800 sticky top-0 text-slate-300 border-b border-slate-700">
+              <tr>
+                <th class="py-3 px-3">#</th>
+                <th class="py-3 px-3">ชื่อภาพยนตร์</th>
+                <th class="py-3 px-3">ทุนสร้าง ($)</th>
+                <th class="py-3 px-3">เปิดตัว ($)</th>
+                <th class="py-3 px-3">Rotten (%)</th>
+                <th class="py-3 px-3">Audience (%)</th>
+                <th class="py-3 px-3">ความยาว (นาที)</th>
+                <th class="py-3 px-3">รายได้รวม ($)</th>
+                <th class="py-3 px-3">กลุ่มที่จัด</th>
+              </tr>
+            </thead>
+            <tbody id="dataset-table-body" class="divide-y divide-slate-800/60 font-mono">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- THIRD TAB: THEORY & REPORT -->
+    <section id="tab-theory" class="hidden space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl space-y-6 leading-relaxed">
+        <div class="border-b border-slate-800 pb-4">
+          <h2 class="text-2xl font-bold text-white">หลักการทางทฤษฎี: Gaussian Naive Bayes Classifier</h2>
+          <p class="text-sm text-slate-400 mt-1">สรุปสาระสำคัญสำหรับใช้ประกอบการทำรายงานส่งอาจารย์ในรายวิชา AI / Machine Learning</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/60 space-y-3">
+            <h3 class="text-base font-semibold text-amber-400 flex items-center gap-2">
+              1. ทฤษฎีบทของเบย์ (Bayes' Theorem)
+            </h3>
+            <p class="text-xs text-slate-300">
+              การจำแนกประเภทใช้หลักการหาความน่าจะเป็นภายหลัง (Posterior Probability) ของคลาส $C$ เมื่อทราบเวกเตอร์คุณลักษณะ $X = (x_1, x_2, ..., x_n)$:
+            </p>
+            <div class="p-3 bg-slate-900 rounded-lg text-center font-mono text-xs text-cyan-300">
+              P(C | X) = [ P(C) &times; P(X | C) ] / P(X)
+            </div>
+            <p class="text-xs text-slate-400">
+              โดยสมมติฐานหลักของ <b>"Naive"</b> คือ สมมติให้ทุก Feature เป็นอิสระต่อกัน (Conditional Independence) เมื่อทราบคลาส $C$
+            </p>
+          </div>
+
+          <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/60 space-y-3">
+            <h3 class="text-base font-semibold text-red-400 flex items-center gap-2">
+              2. การแจกแจงแบบปกติ (Gaussian PDF)
+            </h3>
+            <p class="text-xs text-slate-300">
+              เนื่องจาก Feature ของภาพยนตร์ (ทุนสร้าง, รายได้เปิดตัว, คะแนน, ความยาว) เป็นค่าตัวเลขต่อเนื่อง (Continuous Numeric) จึงคำนวณ Likelihood ด้วยฟังก์ชันความหนาแน่นความน่าจะเป็นแบบเกาส์เซียน:
+            </p>
+            <div class="p-3 bg-slate-900 rounded-lg text-center font-mono text-xs text-amber-300">
+              P(x_i | C) = (1 / &radic;(2&pi;&sigma;²)) &times; exp( - (x_i - &mu;)² / (2&sigma;²) )
+            </div>
+            <p class="text-xs text-slate-400">
+              โดย &mu; คือค่าเฉลี่ย (Mean) และ &sigma;² คือความแปรปรวน (Variance) ของฟีเจอร์นั้นในแต่ละกลุ่ม
+            </p>
+          </div>
+        </div>
+
+        <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/60 space-y-3">
+          <h3 class="text-base font-semibold text-emerald-400">3. สรุปความแตกต่างของสถิติในกลุ่ม Blockbuster vs Regular</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-slate-300">
+            <div class="space-y-1.5 p-3.5 bg-slate-900/70 rounded-lg">
+              <span class="font-bold text-amber-400 text-sm">กลุ่ม Blockbuster (ทำเงินสูง &ge; $700M)</span>
+              <div>• ค่าเฉลี่ยรายได้เปิดตัวสัปดาห์แรก: <b>$183.5M</b></div>
+              <div>• ค่าเฉลี่ยความยาวหนัง: <b>138 นาที</b> (มักเกิน 2 ชม. 15 นาที)</div>
+              <div>• ค่าเฉลี่ยคะแนนมะเขือเทศ: <b>85.4%</b></div>
+            </div>
+            <div class="space-y-1.5 p-3.5 bg-slate-900/70 rounded-lg">
+              <span class="font-bold text-blue-400 text-sm">กลุ่ม Regular (ทำเงินมาตรฐาน &lt; $700M)</span>
+              <div>• ค่าเฉลี่ยรายได้เปิดตัวสัปดาห์แรก: <b>$81.2M</b></div>
+              <div>• ค่าเฉลี่ยความยาวหนัง: <b>122 นาที</b> (กระชับกว่า)</div>
+              <div>• ค่าเฉลี่ยคะแนนมะเขือเทศ: <b>74.3%</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="text-center text-xs text-slate-500 py-4">
+      Lab 3: การจำแนกข้อมูลด้วย Naive Bayes • ชุดข้อมูลจักรวาลมาร์เวล (Marvel Cinematic Universe)
+    </footer>
+  </div>
+
+  <script>
+    // 1. EMBEDDED MCU DATASET (33 Valid Movies)
+    const mcuData = [
+      { title: "Iron Man", budget: 140000000, opening: 98618668, tomato: 94, audience: 91, duration: 126, box: 585174222, class: "Regular" },
+      { title: "The Incredible Hulk", budget: 150000000, opening: 55414050, tomato: 67, audience: 70, duration: 112, box: 264770996, class: "Regular" },
+      { title: "Iron Man 2", budget: 200000000, opening: 128122480, tomato: 72, audience: 71, duration: 124, box: 623933331, class: "Regular" },
+      { title: "Thor", budget: 150000000, opening: 65723338, tomato: 77, audience: 76, duration: 115, box: 449326618, class: "Regular" },
+      { title: "Captain America: The First Avenger", budget: 140000000, opening: 65058524, tomato: 80, audience: 75, duration: 124, box: 370569774, class: "Regular" },
+      { title: "The Avengers", budget: 220000000, opening: 207438708, tomato: 91, audience: 91, duration: 143, box: 1518815515, class: "Blockbuster" },
+      { title: "Iron Man 3", budget: 200000000, opening: 174144585, tomato: 79, audience: 78, duration: 130, box: 1214811252, class: "Blockbuster" },
+      { title: "Thor: The Dark World", budget: 170000000, opening: 85737841, tomato: 66, audience: 75, duration: 112, box: 644783140, class: "Regular" },
+      { title: "Captain America: The Winter Soldier", budget: 170000000, opening: 95023721, tomato: 90, audience: 92, duration: 136, box: 714421503, class: "Blockbuster" },
+      { title: "Guardians of the Galaxy", budget: 170000000, opening: 94320883, tomato: 92, audience: 92, duration: 121, box: 773350147, class: "Blockbuster" },
+      { title: "Avengers: Age of Ultron", budget: 250000000, opening: 191271109, tomato: 76, audience: 83, duration: 141, box: 1402809540, class: "Blockbuster" },
+      { title: "Ant-Man", budget: 130000000, opening: 57225526, tomato: 83, audience: 85, duration: 117, box: 519311965, class: "Regular" },
+      { title: "Captain America: Civil War", budget: 250000000, opening: 179139142, tomato: 90, audience: 89, duration: 147, box: 1153337496, class: "Blockbuster" },
+      { title: "Doctor Strange", budget: 165000000, opening: 85058311, tomato: 89, audience: 85, duration: 115, box: 677718395, class: "Regular" },
+      { title: "Guardians of the Galaxy Vol. 2", budget: 200000000, opening: 146510104, tomato: 85, audience: 87, duration: 136, box: 863756051, class: "Blockbuster" },
+      { title: "Spider-Man: Homecoming", budget: 175000000, opening: 117027503, tomato: 92, audience: 87, duration: 133, box: 880166924, class: "Blockbuster" },
+      { title: "Thor: Ragnarok", budget: 180000000, opening: 122744989, tomato: 93, audience: 87, duration: 130, box: 853983911, class: "Blockbuster" },
+      { title: "Black Panther", budget: 200000000, opening: 202003951, tomato: 96, audience: 79, duration: 134, box: 1347597973, class: "Blockbuster" },
+      { title: "Avengers: Infinity War", budget: 321000000, opening: 257698183, tomato: 85, audience: 91, duration: 149, box: 2048359754, class: "Blockbuster" },
+      { title: "Ant-Man and the Wasp", budget: 162000000, opening: 75812205, tomato: 87, audience: 80, duration: 118, box: 622674139, class: "Regular" },
+      { title: "Captain Marvel", budget: 160000000, opening: 153433423, tomato: 79, audience: 45, duration: 124, box: 1128462972, class: "Blockbuster" },
+      { title: "Avengers: Endgame", budget: 356000000, opening: 357115007, tomato: 94, audience: 90, duration: 181, box: 2797501328, class: "Blockbuster" },
+      { title: "Spider-Man: Far From Home", budget: 160000000, opening: 92579212, tomato: 90, audience: 95, duration: 129, box: 1131927996, class: "Blockbuster" },
+      { title: "Black Widow", budget: 200000000, opening: 80366312, tomato: 79, audience: 91, duration: 134, box: 379751655, class: "Regular" },
+      { title: "Shang-Chi and the Legend of the Ten Rings", budget: 150000000, opening: 75388688, tomato: 92, audience: 98, duration: 132, box: 432243292, class: "Regular" },
+      { title: "Eternals", budget: 200000000, opening: 71297219, tomato: 47, audience: 77, duration: 156, box: 402064899, class: "Regular" },
+      { title: "Spider-Man: No Way Home", budget: 200000000, opening: 260138569, tomato: 93, audience: 98, duration: 148, box: 1912233593, class: "Blockbuster" },
+      { title: "Doctor Strange in the Multiverse of Madness", budget: 200000000, opening: 187420998, tomato: 74, audience: 85, duration: 126, box: 955775804, class: "Blockbuster" },
+      { title: "Thor: Love and Thunder", budget: 250000000, opening: 144165107, tomato: 63, audience: 77, duration: 118, box: 760928081, class: "Blockbuster" },
+      { title: "Black Panther: Wakanda Forever", budget: 250000000, opening: 181339761, tomato: 84, audience: 94, duration: 161, box: 859208836, class: "Blockbuster" },
+      { title: "Ant-Man and the Wasp: Quantumania", budget: 200000000, opening: 106109650, tomato: 46, audience: 82, duration: 124, box: 476071180, class: "Regular" },
+      { title: "Guardians of the Galaxy Vol. 3", budget: 250000000, opening: 118414021, tomato: 82, audience: 94, duration: 150, box: 845555777, class: "Blockbuster" },
+      { title: "The Marvels", budget: 270000000, opening: 46110859, tomato: 62, audience: 82, duration: 105, box: 206136557, class: "Regular" }
+    ];
+
+    const featureKeys = ['budget', 'opening', 'tomato', 'audience', 'duration'];
+    const featureLabels = {
+      budget: 'ทุนสร้าง (Budget)',
+      opening: 'รายได้เปิดตัว (Opening)',
+      tomato: 'คะแนน Rotten Tomatoes',
+      audience: 'คะแนน Audience Score',
+      duration: 'ความยาว (นาที)'
+    };
+
+    // Precompute class statistics (Mean, Variance, Priors)
+    let stats = {
+      Blockbuster: { count: 0, prior: 0, means: {}, vars: {} },
+      Regular: { count: 0, prior: 0, means: {}, vars: {} }
+    };
+
+    function trainModel() {
+      const total = mcuData.length;
+      const bbList = mcuData.filter(d => d.class === 'Blockbuster');
+      const regList = mcuData.filter(d => d.class === 'Regular');
+
+      stats.Blockbuster.count = bbList.length;
+      stats.Regular.count = regList.length;
+      stats.Blockbuster.prior = bbList.length / total;
+      stats.Regular.prior = regList.length / total;
+
+      featureKeys.forEach(f => {
+        // Blockbuster
+        const bbVals = bbList.map(d => d[f]);
+        const bbMean = bbVals.reduce((a, b) => a + b, 0) / bbVals.length;
+        const bbVar = bbVals.reduce((a, b) => a + Math.pow(b - bbMean, 2), 0) / bbVals.length;
+        stats.Blockbuster.means[f] = bbMean;
+        stats.Blockbuster.vars[f] = bbVar || 1e-6;
+
+        // Regular
+        const regVals = regList.map(d => d[f]);
+        const regMean = regVals.reduce((a, b) => a + b, 0) / regVals.length;
+        const regVar = regVals.reduce((a, b) => a + Math.pow(b - regMean, 2), 0) / regVals.length;
+        stats.Regular.means[f] = regMean;
+        stats.Regular.vars[f] = regVar || 1e-6;
+      });
+    }
+
+    // Gaussian Probability Density Function
+    function gaussianPDF(x, mean, variance) {
+      const exponent = Math.exp(-Math.pow(x - mean, 2) / (2 * variance));
+      return (1 / Math.sqrt(2 * Math.PI * variance)) * exponent;
+    }
+
+    // Prediction and UI update function
+    function runNaiveBayes() {
+      const input = {
+        budget: parseFloat(document.getElementById('budget').value),
+        opening: parseFloat(document.getElementById('opening').value),
+        tomato: parseFloat(document.getElementById('tomato').value),
+        audience: parseFloat(document.getElementById('audience').value),
+        duration: parseFloat(document.getElementById('duration').value),
+      };
+
+      // Compute Likelihoods and Log-Posteriors
+      let logPosteriorBB = Math.log(stats.Blockbuster.prior);
+      let logPosteriorReg = Math.log(stats.Regular.prior);
+
+      const likelihoods = {};
+
+      featureKeys.forEach(f => {
+        const pBB = gaussianPDF(input[f], stats.Blockbuster.means[f], stats.Blockbuster.vars[f]);
+        const pReg = gaussianPDF(input[f], stats.Regular.means[f], stats.Regular.vars[f]);
+
+        likelihoods[f] = { bb: pBB, reg: pReg };
+
+        logPosteriorBB += Math.log(pBB > 0 ? pBB : 1e-300);
+        logPosteriorReg += Math.log(pReg > 0 ? pReg : 1e-300);
+      });
+
+      // Softmax conversion for safe percentage probabilities
+      const maxLog = Math.max(logPosteriorBB, logPosteriorReg);
+      const expBB = Math.exp(logPosteriorBB - maxLog);
+      const expReg = Math.exp(logPosteriorReg - maxLog);
+      const probBB = expBB / (expBB + expReg);
+      const probReg = expReg / (expBB + expReg);
+
+      const percentBB = (probBB * 100).toFixed(2);
+      const percentReg = (probReg * 100).toFixed(2);
+
+      // Update Result UI
+      const resultBox = document.getElementById('result-box');
+      const predictedClass = document.getElementById('predicted-class');
+      const desc = document.getElementById('prediction-desc');
+
+      if (probBB >= probReg) {
+        predictedClass.textContent = "BLOCKBUSTER";
+        predictedClass.className = "text-3xl sm:text-4xl font-extrabold text-amber-400 tracking-wide mb-2";
+        desc.textContent = "ภาพยนตร์เรื่องนี้มีแนวโน้มทำรายได้ทะลุ $700,000,000 จัดเป็นภาพยนตร์ฟอร์มยักษ์สำเร็จสูง";
+        resultBox.className = "p-6 rounded-2xl bg-amber-950/30 border border-amber-500/40 text-center transition-all";
+      } else {
+        predictedClass.textContent = "REGULAR";
+        predictedClass.className = "text-3xl sm:text-4xl font-extrabold text-blue-400 tracking-wide mb-2";
+        desc.textContent = "ภาพยนตร์เรื่องนี้มีแนวโน้มทำเงินในเกณฑ์มาตรฐาน (< $700M) สอดคล้องกับพฤติกรรมภาพยนตร์เดี่ยวทั่วไป";
+        resultBox.className = "p-6 rounded-2xl bg-blue-950/30 border border-blue-500/40 text-center transition-all";
+      }
+
+      document.getElementById('prob-blockbuster').textContent = percentBB + "%";
+      document.getElementById('bar-blockbuster').style.width = percentBB + "%";
+
+      document.getElementById('prob-regular').textContent = percentReg + "%";
+      document.getElementById('bar-regular').style.width = percentReg + "%";
+
+      // Fill Likelihood Table
+      const tbody = document.getElementById('likelihood-tbody');
+      tbody.innerHTML = '';
+
+      featureKeys.forEach(f => {
+        const valFormatted = (f === 'budget' || f === 'opening') 
+          ? '$' + (input[f] / 1e6).toFixed(1) + 'M' 
+          : (f === 'duration' ? input[f] + ' นาที' : input[f] + '%');
+
+        const row = document.createElement('tr');
+        row.className = "hover:bg-slate-800/40 transition-colors";
+        row.innerHTML = `
+          <td class="py-2.5 px-2.5 font-medium text-slate-300">${featureLabels[f]}</td>
+          <td class="py-2.5 px-2.5 text-slate-400">${valFormatted}</td>
+          <td class="py-2.5 px-2.5 text-amber-300 font-mono">${likelihoods[f].bb.toExponential(3)}</td>
+          <td class="py-2.5 px-2.5 text-blue-300 font-mono">${likelihoods[f].reg.toExponential(3)}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function formatMoney(num) {
+      return '$' + Number(num).toLocaleString();
+    }
+
+    function updateValues() {
+      const budget = document.getElementById('budget').value;
+      const opening = document.getElementById('opening').value;
+      const tomato = document.getElementById('tomato').value;
+      const audience = document.getElementById('audience').value;
+      const duration = document.getElementById('duration').value;
+
+      document.getElementById('budget-display').textContent = formatMoney(budget);
+      document.getElementById('opening-display').textContent = formatMoney(opening);
+      document.getElementById('tomato-display').textContent = tomato + '%';
+      document.getElementById('audience-display').textContent = audience + '%';
+      document.getElementById('duration-display').textContent = duration + ' นาที';
+
+      // Auto run prediction on input change for real-time reactivity
+      runNaiveBayes();
+    }
+
+    function loadPreset(name) {
+      const presets = {
+        avengers: { budget: 220000000, opening: 207400000, tomato: 91, audience: 91, duration: 143 },
+        antman: { budget: 130000000, opening: 57200000, tomato: 83, audience: 85, duration: 117 },
+        marvels: { budget: 270000000, opening: 46100000, tomato: 62, audience: 82, duration: 105 },
+        spiderman: { budget: 200000000, opening: 260100000, tomato: 93, audience: 98, duration: 148 }
+      };
+
+      const p = presets[name];
+      if (!p) return;
+
+      document.getElementById('budget').value = p.budget;
+      document.getElementById('opening').value = p.opening;
+      document.getElementById('tomato').value = p.tomato;
+      document.getElementById('audience').value = p.audience;
+      document.getElementById('duration').value = p.duration;
+
+      updateValues();
+    }
+
+    function switchTab(tabId) {
+      document.getElementById('tab-predict').classList.add('hidden');
+      document.getElementById('tab-dataset').classList.add('hidden');
+      document.getElementById('tab-theory').classList.add('hidden');
+
+      const buttons = ['predict', 'dataset', 'theory'];
+      buttons.forEach(b => {
+        const btn = document.getElementById(`tab-${b}-btn`);
+        btn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-all";
+      });
+
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tab-${tabId}-btn`);
+      activeBtn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all bg-red-600 text-white shadow-md";
+    }
+
+    function populateDatasetTable(list) {
+      const tbody = document.getElementById('dataset-table-body');
+      tbody.innerHTML = '';
+
+      list.forEach((item, idx) => {
+        const isBB = item.class === 'Blockbuster';
+        const badgeClass = isBB 
+          ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' 
+          : 'bg-blue-500/15 text-blue-400 border border-blue-500/30';
+
+        const row = document.createElement('tr');
+        row.className = "hover:bg-slate-800/50 transition-colors";
+        row.innerHTML = `
+          <td class="py-2.5 px-3 text-slate-500">${idx + 1}</td>
+          <td class="py-2.5 px-3 font-semibold text-white font-sans">${item.title}</td>
+          <td class="py-2.5 px-3">$${(item.budget / 1e6).toFixed(0)}M</td>
+          <td class="py-2.5 px-3">$${(item.opening / 1e6).toFixed(1)}M</td>
+          <td class="py-2.5 px-3">${item.tomato}%</td>
+          <td class="py-2.5 px-3">${item.audience}%</td>
+          <td class="py-2.5 px-3">${item.duration} นาที</td>
+          <td class="py-2.5 px-3 font-medium ${isBB ? 'text-amber-400' : 'text-slate-300'}">$${(item.box / 1e6).toFixed(1)}M</td>
+          <td class="py-2.5 px-3">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${badgeClass}">
+              ${item.class}
+            </span>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function filterDatasetTable() {
+      const search = document.getElementById('dataset-search').value.toLowerCase();
+      const filter = document.getElementById('dataset-filter').value;
+
+      const filtered = mcuData.filter(d => {
+        const matchTitle = d.title.toLowerCase().includes(search);
+        const matchClass = (filter === 'all') || (d.class === filter);
+        return matchTitle && matchClass;
+      });
+
+      populateDatasetTable(filtered);
+    }
+
+    // Initialize application on window load
+    window.onload = function() {
+      trainModel();
+      updateValues();
+      populateDatasetTable(mcuData);
+    };
+  </script>
+</body>
+</html>
