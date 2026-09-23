@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+
   <script>
     tailwind.config = {
       theme: {
@@ -136,6 +137,7 @@
               <select id="k-value" onchange="document.getElementById('k-value-display').innerText = 'K = ' + this.value; runKNN();" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500 outline-none">
                 <option value="1">K = 1 (เพื่อนบ้านใกล้สุด 1 คน)</option>
                 <option value="3">K = 3 (โหวตจาก 3 คน)</option>
+                <option value="4">K = 4 (โหวตจาก 4 คน)</option>
                 <option value="5" selected>K = 5 (โหวตจาก 5 คน - ค่ามาตรฐาน)</option>
                 <option value="7">K = 7 (โหวตจาก 7 คน)</option>
                 <option value="9">K = 9 (โหวตจาก 9 คน)</option>
@@ -259,7 +261,7 @@
               ENGINEERING
             </div>
             <p id="predicted-subtext" class="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto">
-              พนักงานตัวอย่างมีพารามิเตอร์คล้ายคลึงกับกลุ่มบุคลากรในแผนกวิศวกรรมมากที่สุด (4 จาก 5 เสียง)
+              พนักงานตัวอย่างมีพารามิเตอร์คล้ายคลึงกับกลุ่มบุคลากรในแผนกวิศวกรรมมากที่สุด
             </p>
           </div>
 
@@ -455,7 +457,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
             <div class="p-3 bg-slate-900/80 rounded-lg border border-slate-800">
               <span class="font-bold text-white block mb-1">การเลือกค่า K:</span>
-              <span class="text-slate-400">ควรเลือกจำนวน $K$ เป็นเลขคี่ (เช่น 1, 3, 5, 7) เพื่อลดโอกาสการเกิดคะแนนโหวตเสมอกัน (Tie-break)</span>
+              <span class="text-slate-400">โดยทั่วไปนิยมเลือกค่า $K$ เป็นเลขคี่เพื่อป้องกันเสียงเสมอ แต่กรณีใช้เลขคู่ (เช่น $K = 4$) ระบบจะใช้ Tie-breaker ตัดสินด้วยเพื่อนบ้านที่ใกล้ที่สุด</span>
             </div>
             <div class="p-3 bg-slate-900/80 rounded-lg border border-slate-800">
               <span class="font-bold text-white block mb-1">ผลกระทบเมื่อ K ต่ำ:</span>
@@ -645,13 +647,29 @@
         votes[neighbor.targetClass] = (votes[neighbor.targetClass] || 0) + 1;
       });
 
-      // Determine Winner
+      // Determine Winner with Tie-breaker for even K (เช่น K = 4)
       let winningClass = '';
       let maxVotes = -1;
+      let tiedClasses = [];
+
       for (const [cls, count] of Object.entries(votes)) {
         if (count > maxVotes) {
           maxVotes = count;
           winningClass = cls;
+          tiedClasses = [cls];
+        } else if (count === maxVotes) {
+          tiedClasses.push(cls);
+        }
+      }
+
+      // Tie-breaker: หากคะแนนเสมอกัน เลือกคลาสของเพื่อนบ้านลำดับแรกสุด (ระยะห่างน้อยที่สุด)
+      let isTie = tiedClasses.length > 1;
+      if (isTie) {
+        for (const neighbor of topK) {
+          if (tiedClasses.includes(neighbor.targetClass)) {
+            winningClass = neighbor.targetClass;
+            break;
+          }
         }
       }
 
@@ -662,7 +680,9 @@
       const voteSummaryBadge = document.getElementById('vote-summary-badge');
 
       predictedLabel.textContent = winningClass.toUpperCase();
-      voteSummaryBadge.textContent = `${maxVotes} จาก ${k} เสียงโหวต (${((maxVotes/k)*100).toFixed(0)}%)`;
+      voteSummaryBadge.textContent = isTie 
+        ? `${maxVotes}/${k} เสียง (Tie-Break: ใกล้สุด)` 
+        : `${maxVotes} จาก ${k} เสียงโหวต (${((maxVotes/k)*100).toFixed(0)}%)`;
 
       const theme = targetMode === 'Department' ? (deptColors[winningClass] || deptColors.Engineering) : perfColors[winningClass];
       predictedLabel.style.color = theme.text;
@@ -670,9 +690,13 @@
       card.style.backgroundColor = theme.bg;
 
       if (targetMode === 'Department') {
-        predictedSubtext.textContent = `พนักงานมีคุณลักษณะงานใกล้เคียงกับบุคลากรในแผนก ${winningClass} มากที่สุด (คะแนนโหวต ${maxVotes}/${k} เสียง)`;
+        predictedSubtext.textContent = isTie
+          ? `คะแนนเสียงเท่ากัน (${maxVotes} เสียง) จึงตัดสินให้กลุ่ม ${winningClass} ตามเพื่อนบ้านที่มีระยะห่างใกล้ที่สุด`
+          : `พนักงานมีคุณลักษณะงานใกล้เคียงกับบุคลากรในแผนก ${winningClass} มากที่สุด (คะแนนโหวต ${maxVotes}/${k} เสียง)`;
       } else {
-        predictedSubtext.textContent = `จัดอยู่ในกลุ่ม ${winningClass} โดยอ้างอิงจากเพื่อนบ้านที่มีรูปแบบเงินเดือน ประสบการณ์ และผลงานคล้ายคลึงกัน`;
+        predictedSubtext.textContent = isTie
+          ? `คะแนนเสียงเท่ากัน (${maxVotes} เสียง) จึงจัดอยู่ในกลุ่ม ${winningClass} ตามเพื่อนบ้านที่มีระยะห่างใกล้ที่สุด`
+          : `จัดอยู่ในกลุ่ม ${winningClass} โดยอ้างอิงจากเพื่อนบ้านที่มีรูปแบบเงินเดือน ประสบการณ์ และผลงานคล้ายคลึงกัน`;
       }
 
       // Render Voting Bars
@@ -705,7 +729,6 @@
       tbody.innerHTML = '';
 
       topK.forEach((item, index) => {
-        // Similarity % = max(0, (1 - dist / 2)) * 100
         const simPct = Math.max(0, (1 - (item.distance / 2)) * 100).toFixed(1);
         const clsTheme = targetMode === 'Department' ? deptColors[item.dept] : perfColors[item.targetClass];
 
