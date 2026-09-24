@@ -1,10 +1,10 @@
 <?php
 // ---- Fill in the details from your hosting.udru.ac.th database ----
-$DB = ['host' => 'localhost', 'name' => 'YOUR_DB_NAME', 'user' => 'YOUR_DB_USER', 'pass' => 'YOUR_DB_PASSWORD'];
+$DB = ['host' => 'localhost', 'name' => 'it67040233104', 'user' => 'it67040233104', 'pass' => 'S3F7J4X4'];
 
 session_start();
 try {
-  $db = new PDO("mysql:host={$DB['host']};dbname={$DB['it67040233104']};charset=utf8mb4", $DB['it67040233104'], $DB['S3F7J4X4'], [
+  $db = new PDO("mysql:host={$DB['host']};dbname={$DB['name']};charset=utf8mb4", $DB['user'], $DB['pass'], [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
   ]);
