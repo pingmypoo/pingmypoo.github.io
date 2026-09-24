@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Elegance | ร้านเช่าชุดและเครื่องแต่งกาย</title>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .hero {
+      text-align: center;
+      padding: 48px 20px;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: 2.2rem;
+      color: var(--p);
+      margin-bottom: 12px;
+    }
+    .hero p {
+      max-width: 580px;
+      margin: 0 auto 24px;
+      color: #614454;
+      font-size: 1.05rem;
+    }
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 14px;
+      text-align: center;
+    }
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      background: var(--p);
+      color: #fff;
+      border-radius: 50%;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .cat-card {
+      text-align: center;
+      padding: 24px 16px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.2s;
+    }
+    .cat-card:hover {
+      border-color: var(--p);
+    }
+    .cat-card .icon {
+      font-size: 2.8rem;
+      margin-bottom: 8px;
+    }
+    footer {
+      text-align: center;
+      margin-top: 48px;
+      padding: 24px 0;
+      font-size: 0.88rem;
+      color: #8a6f7c;
+      border-top: 1px solid var(--line);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="top">
+    <a class="logo" href="index.html">👗 <b>Elegance</b> ร้านเช่าชุด</a>
+    <nav>
+      <a href="search.php">ค้นหาชุด</a>
+      <a href="login.php" class="btn">เข้าสู่ระบบ</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero card">
+      <h1>ร้านเช่าชุดและเครื่องแต่งกาย Elegance</h1>
+      <p>บริการเช่าชุดราตรี ชุดไทย ชุดสูท และชุดแฟนซีสำหรับทุกโอกาส ดีไซน์สวยงาม ทันสมัย พร้อมเช่าได้สะดวกรวดเร็วผ่านระบบออนไลน์</p>
+      <div class="hero-actions">
+        <a href="search.php" class="btn main">ค้นหาและเลือกชุด</a>
+        <a href="login.php" class="btn main alt">เข้าสู่ระบบ / สมัครสมาชิก</a>
+      </div>
+    </section>
+
+    <section>
+      <h2>หมวดหมู่ชุดยอดนิยม</h2>
+      <div class="grid">
+        <a class="card cat-card" href="search.php?cat=ชุดไทย">
+          <div class="icon">🌸</div>
+          <b>ชุดไทย</b>
+          <p style="margin: 4px 0 0; font-size: 0.9rem; color: #735967;">ชุดไทยจิตรลดา และชุดไทยประยุกต์</p>
+        </a>
+        <a class="card cat-card" href="search.php?cat=ชุดราตรี">
+          <div class="icon">✨</div>
+          <b>ชุดราตรี</b>
+          <p style="margin: 4px 0 0; font-size: 0.9rem; color: #735967;">ชุดออกงาน งานเลี้ยง คัตติ้งหรูหรา</p>
+        </a>
+        <a class="card cat-card" href="search.php?cat=ชุดสูท">
+          <div class="icon">🤵</div>
+          <b>ชุดสูท</b>
+          <p style="margin: 4px 0 0; font-size: 0.9rem; color: #735967;">สูทสากลสำหรับงานทางการและงานพิธี</p>
+        </a>
+        <a class="card cat-card" href="search.php?cat=ชุดแฟนซี">
+          <div class="icon">🎭</div>
+          <b>ชุดแฟนซี</b>
+          <p style="margin: 4px 0 0; font-size: 0.9rem; color: #735967;">คอสตูมปาร์ตี้ ละคร และกิจกรรมพิเศษ</p>
+        </a>
+      </div>
+    </section>
+
+    <section style="margin-top: 36px;">
+      <h2>ขั้นตอนการเช่าชุด</h2>
+      <div class="steps">
+        <div class="card">
+          <div class="step-num">1</div>
+          <h3 style="margin:0 0 8px;">เลือกชุด</h3>
+          <p style="margin:0; font-size: 0.92rem; color: #6a4f5d;">เลือกแบบ ไซซ์ และตรวจสอบสถานะความพร้อมใช้งาน</p>
+        </div>
+        <div class="card">
+          <div class="step-num">2</div>
+          <h3 style="margin:0 0 8px;">กำหนดวันรับ-คืน</h3>
+          <p style="margin:0; font-size: 0.92rem; color: #6a4f5d;">ระบุวันที่ต้องการเช่า ระบบจะคำนวณยอดเงินรวมให้อัตโนมัติ</p>
+        </div>
+        <div class="card">
+          <div class="step-num">3</div>
+          <h3 style="margin:0 0 8px;">ชำระเงินและรับชุด</h3>
+          <p style="margin:0; font-size: 0.92rem; color: #6a4f5d;">ชำระผ่านช่องทางที่สะดวก พร้อมรับหลักฐานยืนยันการจอง</p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      © Elegance ร้านเช่าชุดและเครื่องแต่งกาย
+    </footer>
+  </main>
+
+</body>
+</html>
