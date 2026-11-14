@@ -500,7 +500,7 @@
         /* Skills Section */
         .skills-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 16px;
         }
 
@@ -557,7 +557,7 @@
         /* Projects Section */
         .projects-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 18px;
         }
 
@@ -598,7 +598,24 @@
         .project-item p {
             color: var(--text-secondary);
             font-size: 0.94rem;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
+        }
+
+        .project-tech {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .tech-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.74rem;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
         }
 
         .project-link {
@@ -609,6 +626,10 @@
             font-weight: 600;
             font-size: 0.9rem;
             text-decoration: none;
+        }
+
+        [data-theme="light"] .project-link {
+            color: var(--accent);
         }
 
         .project-link:hover {
@@ -642,6 +663,10 @@
             margin-bottom: 4px;
         }
 
+        [data-theme="light"] .timeline-year {
+            color: var(--accent);
+        }
+
         .timeline-title {
             font-size: 1.1rem;
             font-weight: 600;
@@ -656,16 +681,16 @@
         /* Activities List */
         .activity-list {
             list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 14px;
         }
 
         .activity-item {
             display: flex;
             align-items: center;
             gap: 14px;
-            padding: 14px 18px;
+            padding: 16px 18px;
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 14px;
@@ -807,7 +832,7 @@
         <div class="hero-card">
             <div class="status-badge">
                 <span class="status-pulse"></span>
-                <span>OPEN TO OPPORTUNITIES • AI &amp; SOFTWARE ENGINEERING</span>
+                <span>OPEN TO INTERNSHIP • AI &amp; SOFTWARE ENGINEERING</span>
             </div>
 
             <div class="avatar-wrapper">
@@ -871,10 +896,10 @@
             </div>
         </section>
 
-        <!-- 4. Education -->
+        <!-- 2. Education -->
         <section id="education" class="card col-5">
             <div class="section-header">
-                <span class="section-num">04</span>
+                <span class="section-num">02</span>
                 <h2>การศึกษา (Education)</h2>
             </div>
             <div class="timeline-item">
@@ -887,29 +912,34 @@
             </div>
         </section>
 
-        <!-- 2. Skills -->
+        <!-- 3. Skills -->
         <section id="skills" class="card">
             <div class="section-header">
-                <span class="section-num">02</span>
+                <span class="section-num">03</span>
                 <h2>ทักษะ (Skills)</h2>
             </div>
             <div class="skills-grid">
                 <div class="skill-group">
-                    <div class="skill-group-title">💻 Programming</div>
+                    <div class="skill-group-title">💻 Programming &amp; Web</div>
                     <div class="skill-pills">
+                        <span class="skill-pill">Python</span>
+                        <span class="skill-pill">PHP</span>
+                        <span class="skill-pill">JavaScript</span>
                         <span class="skill-pill">Java</span>
                         <span class="skill-pill">C</span>
-                        <span class="skill-pill">JavaScript</span>
+                        <span class="skill-pill">SQL</span>
                         <span class="skill-pill">HTML / CSS</span>
                     </div>
                 </div>
                 <div class="skill-group">
-                    <div class="skill-group-title">🛠️ Tools &amp; Workflow</div>
+                    <div class="skill-group-title">🛠️ Tools, DB &amp; Automation</div>
                     <div class="skill-pills">
-                        <span class="skill-pill">Git</span>
-                        <span class="skill-pill">GitHub</span>
+                        <span class="skill-pill">AutoHotkey v2</span>
+                        <span class="skill-pill">PowerShell</span>
+                        <span class="skill-pill">MySQL / XAMPP</span>
+                        <span class="skill-pill">Git &amp; GitHub</span>
                         <span class="skill-pill">VS Code</span>
-                        <span class="skill-pill">AutoHotkey</span>
+                        <span class="skill-pill">Figma</span>
                     </div>
                 </div>
                 <div class="skill-group">
@@ -918,39 +948,102 @@
                         <span class="skill-pill">การสื่อสาร (Communication)</span>
                         <span class="skill-pill">การทำงานเป็นทีม (Teamwork)</span>
                         <span class="skill-pill">การแก้ปัญหา (Problem Solving)</span>
+                        <span class="skill-pill">การวิเคราะห์ระบบ (System Analysis)</span>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- 3. Projects -->
-        <section id="projects" class="card col-6">
+        <!-- 4. Projects (Full Width Grid for 5 Projects) -->
+        <section id="projects" class="card">
             <div class="section-header">
-                <span class="section-num">03</span>
+                <span class="section-num">04</span>
                 <h2>ผลงานที่ผ่านมา (Projects)</h2>
             </div>
             <div class="projects-grid">
+                <!-- Project 1: AutoHotkey v2 GUI & Discord Alert -->
                 <div class="project-item">
                     <div>
-                        <span class="project-badge">Automation Script</span>
-                        <h3>Auto Hotkey</h3>
-                        <p>พัฒนาสคริป Auto Hotkey เพื่อความสะดวกสบายในการ Botting และทำงานซ้ำ ๆ แบบอัตโนมัติอย่างแม่นยำ</p>
+                        <span class="project-badge">Desktop Automation &amp; GUI</span>
+                        <h3>🖥️ Automated Screen Detection &amp; Alert System</h3>
+                        <p>พัฒนาโปรแกรมอัตโนมัติบน Windows พร้อมหน้าต่าง <strong>Always-on-Top GUI</strong> สำหรับตั้งค่าและบันทึก Discord Webhook อัปเกรดระบบตรวจจับภาพและข้อความด้วย <strong>FindText Library</strong> แคปหน้าจออัตโนมัติ มีระบบ Cooldown กันสแปม และส่งแจ้งเตือนผ่าน PowerShell</p>
+                        <div class="project-tech">
+                            <span class="tech-tag">AutoHotkey v2</span>
+                            <span class="tech-tag">FindText</span>
+                            <span class="tech-tag">PowerShell</span>
+                            <span class="tech-tag">Discord Webhook</span>
+                        </div>
                     </div>
-                    <span class="project-link">⚡ Macro &amp; Workflow Automation</span>
+                    <span class="project-link">⚡ GUI &amp; Workflow Automation</span>
                 </div>
+
+                <!-- Project 2: Boss Tracker -->
                 <div class="project-item">
                     <div>
                         <span class="project-badge">Web Utility</span>
                         <h3>🔥 Boss Tracker</h3>
-                        <p>เว็บแอปพลิเคชันสำหรับติดตามสถานะและเวลาเกิดของบอส ใช้งานง่ายและรวดเร็ว</p>
+                        <p>เว็บแอปพลิเคชันสำหรับติดตามสถานะและคำนวณเวลาเกิดของบอสแบบเรียลไทม์ ออกแบบอินเทอร์เฟซให้ใช้งานง่ายและรวดเร็ว</p>
+                        <div class="project-tech">
+                            <span class="tech-tag">HTML5</span>
+                            <span class="tech-tag">CSS3</span>
+                            <span class="tech-tag">JavaScript</span>
+                        </div>
                     </div>
                     <a href="boss-tracker.html" class="project-link">เปิดใช้งาน Boss Tracker →</a>
+                </div>
+
+                <!-- Project 3: Web-Based Costume Rental System -->
+                <div class="project-item">
+                    <div>
+                        <span class="project-badge">Full-Stack Web &amp; System Analysis</span>
+                        <h3>👗 ระบบบริหารจัดการร้านเช่าชุด (Costume Rental System)</h3>
+                        <p>พัฒนาเว็บแอปพลิเคชันจัดการสต็อกชุด การจองเช่า-คืน และฐานข้อมูลลูกค้า พร้อมจัดทำเอกสารวิเคราะห์ระบบครบชุด ทั้ง Context Diagram, Gane &amp; Sarson DFD (Level 0–1) และ Hierarchy Chart</p>
+                        <div class="project-tech">
+                            <span class="tech-tag">PHP</span>
+                            <span class="tech-tag">MySQL</span>
+                            <span class="tech-tag">JavaScript</span>
+                            <span class="tech-tag">DFD / SA</span>
+                        </div>
+                    </div>
+                    <span class="project-link">🗂️ Full-Stack &amp; System Design</span>
+                </div>
+
+                <!-- Project 4: ML Classifier Benchmark & HTML Dashboard -->
+                <div class="project-item">
+                    <div>
+                        <span class="project-badge">Machine Learning &amp; Data Viz</span>
+                        <h3>📊 ML Classifier Benchmark &amp; Interactive Dashboard</h3>
+                        <p>พัฒนาโมเดลจำแนกข้อมูล (Naive Bayes, Decision Tree, K-NN) ด้วยเทคนิค 5-Fold Cross-Validation บนชุดข้อมูล Employees, Car Evaluation และ Heart Failure พร้อมสร้างสคริปต์ส่งออกผลลัพธ์ Confusion Matrix (TP, FP, FN, TN) เป็นหน้าเว็บ Dashboard</p>
+                        <div class="project-tech">
+                            <span class="tech-tag">Python</span>
+                            <span class="tech-tag">scikit-learn</span>
+                            <span class="tech-tag">pandas</span>
+                            <span class="tech-tag">HTML/CSS</span>
+                        </div>
+                    </div>
+                    <span class="project-link">🤖 Model Evaluation &amp; Reporting</span>
+                </div>
+
+                <!-- Project 5: Relational Database Architecture -->
+                <div class="project-item">
+                    <div>
+                        <span class="project-badge">Database Engineering</span>
+                        <h3>🗄️ ออกแบบโครงสร้างฐานข้อมูลเชิงสัมพันธ์ (RP Apartment)</h3>
+                        <p>ออกแบบ ER Diagram และ Relational Schema แบบ Normalized สำหรับระบบจัดการหอพัก (RP Apartment) และระบบเช่าอุปกรณ์ เพื่อรองรับการจอง การออกบิล และการติดตามสถานะทรัพย์สินอย่างแม่นยำ</p>
+                        <div class="project-tech">
+                            <span class="tech-tag">SQL</span>
+                            <span class="tech-tag">MySQL</span>
+                            <span class="tech-tag">ER Diagram</span>
+                            <span class="tech-tag">Normalization</span>
+                        </div>
+                    </div>
+                    <span class="project-link">📐 Relational Schema Design</span>
                 </div>
             </div>
         </section>
 
         <!-- 5. Activities -->
-        <section id="activities" class="card col-6">
+        <section id="activities" class="card">
             <div class="section-header">
                 <span class="section-num">05</span>
                 <h2>กิจกรรมและผลงานอื่น ๆ (Activities)</h2>
@@ -973,10 +1066,10 @@
             </ul>
         </section>
 
-        <!-- 7. Career Goal -->
+        <!-- 6. Career Goal -->
         <section id="goal" class="card">
             <div class="section-header">
-                <span class="section-num">07</span>
+                <span class="section-num">06</span>
                 <h2>เป้าหมายในอนาคต (Career Goal)</h2>
             </div>
             <div class="goal-box">
@@ -985,10 +1078,10 @@
             </div>
         </section>
 
-        <!-- 6. Contact -->
+        <!-- 7. Contact -->
         <section id="contact" class="card contact">
             <div class="section-header">
-                <span class="section-num">06</span>
+                <span class="section-num">07</span>
                 <h2>ติดต่อ (Contact)</h2>
             </div>
             <div class="contact-grid">
