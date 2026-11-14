@@ -321,7 +321,7 @@
         }
 
         .hero-bio {
-            max-width: 620px;
+            max-width: 650px;
             margin: 0 auto 28px;
             color: var(--text-secondary);
             font-size: 1rem;
@@ -500,7 +500,7 @@
         /* Skills Section */
         .skills-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 16px;
         }
 
@@ -543,7 +543,7 @@
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 10px;
-            font-size: 0.88rem;
+            font-size: 0.86rem;
             font-weight: 500;
             color: var(--text-primary);
             transition: all 0.2s ease;
@@ -676,6 +676,23 @@
         .timeline-sub {
             color: var(--text-secondary);
             font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+
+        .coursework-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .course-tag {
+            font-size: 0.78rem;
+            padding: 3px 10px;
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
         }
 
         /* Activities List */
@@ -688,7 +705,7 @@
 
         .activity-item {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 14px;
             padding: 16px 18px;
             background: var(--bg-secondary);
@@ -711,6 +728,7 @@
             justify-content: center;
             font-size: 1.2rem;
             flex-shrink: 0;
+            margin-top: 2px;
         }
 
         /* Career Goal Banner */
@@ -813,9 +831,10 @@
             </a>
             <ul class="nav-links">
                 <li><a href="#intro">แนะนำตัว</a></li>
+                <li><a href="#education">การศึกษา</a></li>
                 <li><a href="#skills">ทักษะ</a></li>
                 <li><a href="#projects">ผลงาน</a></li>
-                <li><a href="#education">การศึกษา</a></li>
+                <li><a href="#activities">กิจกรรม</a></li>
                 <li><a href="#contact">ติดต่อ</a></li>
             </ul>
             <div class="nav-actions">
@@ -832,7 +851,7 @@
         <div class="hero-card">
             <div class="status-badge">
                 <span class="status-pulse"></span>
-                <span>OPEN TO INTERNSHIP • AI &amp; SOFTWARE ENGINEERING</span>
+                <span>OPEN TO INTERNSHIP • SOFTWARE DEV &amp; AI ENGINEERING</span>
             </div>
 
             <div class="avatar-wrapper">
@@ -840,11 +859,11 @@
                      onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22><rect width=%22200%22 height=%22200%22 fill=%22%23111827%22/><text x=%2250%25%22 y=%2254%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%2310b981%22 font-family=%22sans-serif%22 font-size=%2264%22 font-weight=%22bold%22>CK</text></svg>';">
             </div>
 
-            <h1>ฉัตรมงคล คาน</h1>
-            <p class="hero-subtitle">Information Technology | AI Engineering</p>
+            <h1>ฉัตรมงคล คาน (Chatmongkol Khan)</h1>
+            <p class="hero-subtitle">Information Technology | Software Development &amp; AI Engineering</p>
             <p class="hero-bio">
-                นักศึกษาผู้หลงใหลในการพัฒนาซอฟต์แวร์ ปัญญาประดิษฐ์ (AI) และระบบอัตโนมัติ
-                มุ่งมั่นสร้างสรรค์โซลูชันที่ใช้งานได้จริงและมีประสิทธิภาพ
+                นักศึกษาสาขาเทคโนโลยีสารสนเทศ มหาวิทยาลัยราชภัฏอุดรธานี ที่มีความหลงใหลในการพัฒนาซอฟต์แวร์
+                การออกแบบฐานข้อมูล ปัญญาประดิษฐ์ (AI) และระบบอัตโนมัติ (Automation) เพื่อสร้างโซลูชันที่ใช้งานได้จริง
             </p>
 
             <div class="hero-actions">
@@ -862,12 +881,12 @@
                     <span class="stat-label">มหาวิทยาลัยราชภัฏอุดรธานี</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value">AI &amp; SE</span>
+                    <span class="stat-value">Full-Stack &amp; AI</span>
                     <span class="stat-label">สายงานที่มุ่งเน้น</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value">2567 – ปัจจุบัน</span>
-                    <span class="stat-label">กำลังศึกษา (IT / CS)</span>
+                    <span class="stat-value">2567 – 2571</span>
+                    <span class="stat-label">กำลังศึกษา (คาดว่าจะจบปี 2028)</span>
                 </div>
             </div>
         </div>
@@ -883,16 +902,16 @@
                 <h2>แนะนำตัว (Introduction)</h2>
             </div>
             <p class="intro-text">
-                สวัสดีครับ ผม <strong>นายฉัตรมงคล คาน</strong><br>
-                นักศึกษาสาขาวิทยาการคอมพิวเตอร์ / เทคโนโลยีสารสนเทศ<br>
+                สวัสดีครับ ผม <strong>นายฉัตรมงคล คาน (ปิงปิง)</strong><br>
+                นักศึกษาสาขาเทคโนโลยีสารสนเทศ / คอมพิวเตอร์ธุรกิจ (รหัสนักศึกษา 67040233104)<br>
                 <strong>มหาวิทยาลัยราชภัฏอุดรธานี (Udon Thani Rajabhat University)</strong><br>
-                มีความสนใจด้าน <strong>AI, Software Engineering</strong> และการสร้างเครื่องมืออัตโนมัติที่ช่วยเพิ่มประสิทธิภาพในการทำงาน
+                มีประสบการณ์ลงมือพัฒนาจริงทั้งระบบ <strong>Desktop Automation, Full-Stack Web Application, การออกแบบฐานข้อมูลเชิงสัมพันธ์</strong> และ <strong>Machine Learning</strong> พร้อมเรียนรู้เทคโนโลยีใหม่และทำงานร่วมกับทีมวิศวกรซอฟต์แวร์
             </p>
             <div class="highlight-tags">
-                <span class="chip">🤖 Artificial Intelligence</span>
-                <span class="chip">💻 Software Engineering</span>
-                <span class="chip">📊 Data Science</span>
-                <span class="chip">⚡ Automation Scripting</span>
+                <span class="chip">⚡ Desktop Automation</span>
+                <span class="chip">💻 Full-Stack Web Dev</span>
+                <span class="chip">🗄️ Database Design</span>
+                <span class="chip">🤖 Machine Learning</span>
             </div>
         </section>
 
@@ -903,11 +922,20 @@
                 <h2>การศึกษา (Education)</h2>
             </div>
             <div class="timeline-item">
-                <span class="timeline-year">ปีการศึกษา 2567 – ปัจจุบัน</span>
+                <span class="timeline-year">2567 – คาดว่าจะสำเร็จการศึกษา 2571 (2028)</span>
                 <div class="timeline-title">มหาวิทยาลัยราชภัฏอุดรธานี</div>
                 <div class="timeline-sub">
-                    คณะวิทยาศาสตร์<br>
-                    สาขาเทคโนโลยีสารสนเทศ (Information Technology)
+                    คณะวิทยาศาสตร์ • สาขาเทคโนโลยีสารสนเทศ / คอมพิวเตอร์ธุรกิจ<br>
+                    (B.Sc. in Information Technology / Business Computer)
+                </div>
+                <div style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary); margin-top: 10px;">
+                    รายวิชาหลักที่เกี่ยวข้อง (Relevant Coursework):
+                </div>
+                <div class="coursework-list">
+                    <span class="course-tag">System Analysis &amp; Design</span>
+                    <span class="course-tag">Database Management Systems</span>
+                    <span class="course-tag">Web Programming</span>
+                    <span class="course-tag">Machine Learning &amp; Data Mining</span>
                 </div>
             </div>
         </section>
@@ -916,39 +944,73 @@
         <section id="skills" class="card">
             <div class="section-header">
                 <span class="section-num">03</span>
-                <h2>ทักษะ (Skills)</h2>
+                <h2>ทักษะความสามารถ (Technical &amp; Soft Skills)</h2>
             </div>
             <div class="skills-grid">
                 <div class="skill-group">
-                    <div class="skill-group-title">💻 Programming &amp; Web</div>
+                    <div class="skill-group-title">💻 Programming &amp; Scripting</div>
                     <div class="skill-pills">
                         <span class="skill-pill">Python</span>
                         <span class="skill-pill">PHP</span>
                         <span class="skill-pill">JavaScript</span>
+                        <span class="skill-pill">SQL</span>
+                        <span class="skill-pill">AutoHotkey (AHK v2)</span>
+                        <span class="skill-pill">PowerShell</span>
                         <span class="skill-pill">Java</span>
                         <span class="skill-pill">C</span>
-                        <span class="skill-pill">SQL</span>
-                        <span class="skill-pill">HTML / CSS</span>
+                        <span class="skill-pill">HTML5 / CSS3</span>
                     </div>
                 </div>
+
                 <div class="skill-group">
-                    <div class="skill-group-title">🛠️ Tools, DB &amp; Automation</div>
+                    <div class="skill-group-title">📦 Frameworks &amp; Libraries</div>
                     <div class="skill-pills">
-                        <span class="skill-pill">AutoHotkey v2</span>
-                        <span class="skill-pill">PowerShell</span>
-                        <span class="skill-pill">MySQL / XAMPP</span>
+                        <span class="skill-pill">scikit-learn</span>
+                        <span class="skill-pill">pandas</span>
+                        <span class="skill-pill">NumPy</span>
+                        <span class="skill-pill">FindText Library</span>
+                    </div>
+                </div>
+
+                <div class="skill-group">
+                    <div class="skill-group-title">🛠️ Database &amp; Tools</div>
+                    <div class="skill-pills">
+                        <span class="skill-pill">MySQL</span>
+                        <span class="skill-pill">phpMyAdmin</span>
+                        <span class="skill-pill">XAMPP</span>
                         <span class="skill-pill">Git &amp; GitHub</span>
                         <span class="skill-pill">VS Code</span>
                         <span class="skill-pill">Figma</span>
+                        <span class="skill-pill">Photopea</span>
                     </div>
                 </div>
+
+                <div class="skill-group">
+                    <div class="skill-group-title">📐 System Analysis &amp; UI/UX</div>
+                    <div class="skill-pills">
+                        <span class="skill-pill">ER Diagrams</span>
+                        <span class="skill-pill">DFD (Gane &amp; Sarson)</span>
+                        <span class="skill-pill">Material Design Evaluation</span>
+                        <span class="skill-pill">Wireframing &amp; Prototyping</span>
+                    </div>
+                </div>
+
+                <div class="skill-group">
+                    <div class="skill-group-title">🌐 Languages</div>
+                    <div class="skill-pills">
+                        <span class="skill-pill">Thai (Native)</span>
+                        <span class="skill-pill">English (Intermediate – B1/B2)</span>
+                        <span class="skill-pill">Chinese (Basic Conversational)</span>
+                    </div>
+                </div>
+
                 <div class="skill-group">
                     <div class="skill-group-title">🤝 Soft Skills</div>
                     <div class="skill-pills">
+                        <span class="skill-pill">การแก้ปัญหาเชิงวิเคราะห์ (Problem Solving)</span>
                         <span class="skill-pill">การสื่อสาร (Communication)</span>
                         <span class="skill-pill">การทำงานเป็นทีม (Teamwork)</span>
-                        <span class="skill-pill">การแก้ปัญหา (Problem Solving)</span>
-                        <span class="skill-pill">การวิเคราะห์ระบบ (System Analysis)</span>
+                        <span class="skill-pill">วินัยและความรับผิดชอบ (Leadership)</span>
                     </div>
                 </div>
             </div>
@@ -1002,6 +1064,7 @@
                             <span class="tech-tag">PHP</span>
                             <span class="tech-tag">MySQL</span>
                             <span class="tech-tag">JavaScript</span>
+                            <span class="tech-tag">XAMPP</span>
                             <span class="tech-tag">DFD / SA</span>
                         </div>
                     </div>
@@ -1018,6 +1081,7 @@
                             <span class="tech-tag">Python</span>
                             <span class="tech-tag">scikit-learn</span>
                             <span class="tech-tag">pandas</span>
+                            <span class="tech-tag">NumPy</span>
                             <span class="tech-tag">HTML/CSS</span>
                         </div>
                     </div>
@@ -1028,8 +1092,8 @@
                 <div class="project-item">
                     <div>
                         <span class="project-badge">Database Engineering</span>
-                        <h3>🗄️ ออกแบบโครงสร้างฐานข้อมูลเชิงสัมพันธ์ (RP Apartment)</h3>
-                        <p>ออกแบบ ER Diagram และ Relational Schema แบบ Normalized สำหรับระบบจัดการหอพัก (RP Apartment) และระบบเช่าอุปกรณ์ เพื่อรองรับการจอง การออกบิล และการติดตามสถานะทรัพย์สินอย่างแม่นยำ</p>
+                        <h3>🗄️ ออกแบบโครงสร้างฐานข้อมูลเชิงสัมพันธ์ (RP Apartment &amp; Equipment Rental)</h3>
+                        <p>ออกแบบ ER Diagram และ Relational Schema แบบ Normalized สำหรับระบบจัดการหอพัก (RP Apartment) และระบบเช่าอุปกรณ์แคมป์ปิ้ง เพื่อรองรับการจอง การออกบิล และการติดตามสถานะทรัพย์สินอย่างแม่นยำ</p>
                         <div class="project-tech">
                             <span class="tech-tag">SQL</span>
                             <span class="tech-tag">MySQL</span>
@@ -1042,18 +1106,18 @@
             </div>
         </section>
 
-        <!-- 5. Activities -->
+        <!-- 5. Activities & Leadership -->
         <section id="activities" class="card">
             <div class="section-header">
                 <span class="section-num">05</span>
-                <h2>กิจกรรมและผลงานอื่น ๆ (Activities)</h2>
+                <h2>กิจกรรมและภาวะผู้นำ (Activities &amp; Leadership)</h2>
             </div>
             <ul class="activity-list">
                 <li class="activity-item">
-                    <div class="activity-icon">🧠</div>
+                    <div class="activity-icon">🎖️</div>
                     <div>
-                        <strong>ผู้เข้าร่วมอบรม AI</strong>
-                        <div style="font-size: 0.88rem; color: var(--text-secondary);">เรียนรู้และฝึกฝนการประยุกต์ใช้งานเทคโนโลยีปัญญาประดิษฐ์สมัยใหม่</div>
+                        <strong>นักศึกษาวิชาทหาร ชั้นปีที่ 3 — ยศสิบเอก (Sergeant)</strong>
+                        <div style="font-size: 0.88rem; color: var(--text-secondary);">สำเร็จหลักสูตรการฝึกนักศึกษาวิชาทหาร 3 ปี เสริมสร้างความมีระเบียบวินัย ภาวะผู้นำ และการทำงานเป็นทีมภายใต้สภาวะกดดัน</div>
                     </div>
                 </li>
                 <li class="activity-item">
@@ -1061,6 +1125,13 @@
                     <div>
                         <strong>เข้าร่วมการแข่งขัน UDRU Hackathon 2025</strong>
                         <div style="font-size: 0.88rem; color: var(--text-secondary);">ร่วมทีมระดมสมองและพัฒนาต้นแบบนวัตกรรมซอฟต์แวร์ภายในเวลาที่กำหนด</div>
+                    </div>
+                </li>
+                <li class="activity-item">
+                    <div class="activity-icon">🧠</div>
+                    <div>
+                        <strong>ผู้เข้าร่วมอบรม AI (Artificial Intelligence Workshop)</strong>
+                        <div style="font-size: 0.88rem; color: var(--text-secondary);">เรียนรู้และฝึกฝนการประยุกต์ใช้งานเทคโนโลยีปัญญาประดิษฐ์สมัยใหม่</div>
                     </div>
                 </li>
             </ul>
@@ -1104,8 +1175,8 @@
                 <div class="contact-card">
                     <div class="contact-icon">📍</div>
                     <div>
-                        <div class="contact-label">จังหวัด (Location)</div>
-                        <div class="contact-value">อุดรธานี, ประเทศไทย</div>
+                        <div class="contact-label">พื้นที่ที่สะดวก (Location)</div>
+                        <div class="contact-value">อุดรธานี / กรุงเทพฯ (พระราม 2)</div>
                     </div>
                 </div>
             </div>
